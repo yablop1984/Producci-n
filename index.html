@@ -6,6 +6,43 @@
   <title>Captura Producción Bugel</title>
   <link rel="manifest" href="manifest.json">
   <style>
+  body {
+    font-family: sans-serif;
+    padding: 1rem;
+    background-color: #f2f5f9;
+  }
+  .container {
+    max-width: 500px;
+    margin: auto;
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 0.2rem;
+    color: #333333;
+  }
+  select, input, button {
+    width: 100%;
+    margin-bottom: 1rem;
+    padding: 0.6rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+  }
+  button {
+    background-color: #2d89ef;
+    color: white;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #1b5fcc;
+  }
     body { font-family: sans-serif; padding: 1rem; }
     .hidden { display: none; }
     .container { max-width: 500px; margin: auto; }
@@ -13,6 +50,9 @@
   </style>
 </head>
 <body>
+  <div style="text-align: center; margin-bottom: 1rem;">
+    <img src="logo.png" alt="Logo" style="max-width: 100px;" />
+  </div>
   <div class="container">
     <div id="pantalla-login">
       <h2>Inicio de Sesión</h2>
@@ -23,10 +63,14 @@
 
     <div id="pantalla-seleccion" class="hidden">
       <h2>Producción</h2>
-      <select id="proyecto"></select>
-      <select id="ruta" onchange="filtrarMaquinas()"></select>
-      <select id="maquina" onchange="filtrarProcesos()"></select>
-      <select id="proceso"></select>
+      <label for="proyecto">Proyecto:</label>
+      <select id="proyecto"><option value="">Seleccione un proyecto</option></select>
+      <label for="ruta">Ruta:</label>
+      <select id="ruta" onchange="filtrarMaquinas()" disabled><option value="">Seleccione una ruta</option></select>
+      <label for="maquina">Máquina:</label>
+      <select id="maquina" onchange="filtrarProcesos()" disabled><option value="">Seleccione una máquina</option></select>
+      <label for="proceso">Proceso:</label>
+      <select id="proceso" disabled><option value="">Seleccione un proceso</option></select>
       <button onclick="continuar()">Continuar</button>
     </div>
 
@@ -72,6 +116,7 @@ async function inicializar() {
   const rutasUnicas = [...new Set(rutasMaquinas.map(r => r.ruta))];
   const selRuta = document.getElementById('ruta');
   rutasUnicas.forEach(r => {
+    document.getElementById('ruta').disabled = false;
     const op = document.createElement('option');
     op.value = r;
     op.textContent = r;
@@ -94,6 +139,11 @@ function validarLogin() {
 }
 
 function filtrarMaquinas() {
+  document.getElementById('maquina').disabled = true;
+  document.getElementById('proceso').disabled = true;
+  document.getElementById('maquina').innerHTML = '<option value="">Seleccione una máquina</option>';
+  document.getElementById('proceso').innerHTML = '<option value="">Seleccione un proceso</option>';
+
   const rutaSel = document.getElementById('ruta').value;
   const maquinas = rutasMaquinas.filter(r => r.ruta === rutaSel).map(r => r.maquina);
   const selMaquina = document.getElementById('maquina');
@@ -103,11 +153,15 @@ function filtrarMaquinas() {
     op.value = m;
     op.textContent = m;
     selMaquina.appendChild(op);
+      document.getElementById('maquina').disabled = false;
   });
   filtrarProcesos();
 }
 
 function filtrarProcesos() {
+  document.getElementById('proceso').disabled = true;
+  document.getElementById('proceso').innerHTML = '<option value="">Seleccione un proceso</option>';
+
   const rutaSel = document.getElementById('ruta').value;
   const maqSel = document.getElementById('maquina').value;
   const procesos = rutasMaquinas.filter(r => r.ruta === rutaSel && r.maquina === maqSel).map(r => r.proceso);
@@ -118,6 +172,7 @@ function filtrarProcesos() {
     op.value = p;
     op.textContent = p;
     selProceso.appendChild(op);
+      document.getElementById('proceso').disabled = false;
   });
 }
 
