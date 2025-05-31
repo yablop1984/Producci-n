@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Captura Producción Bugel</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body { font-family: sans-serif; padding: 1rem; }
+    .hidden { display: none; }
+    .container { max-width: 500px; margin: auto; }
+    select, input, button { display: block; width: 100%; margin-bottom: 1rem; padding: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="pantalla-login">
+      <h2>Inicio de Sesión</h2>
+      <select id="nombre-empleado"></select>
+      <input type="password" id="clave-empleado" placeholder="Clave" />
+      <button onclick="validarLogin()">Ingresar</button>
+    </div>
+
+    <div id="pantalla-seleccion" class="hidden">
+      <h2>Producción</h2>
+      <select id="proyecto"></select>
+      <select id="ruta" onchange="filtrarMaquinas()"></select>
+      <select id="maquina" onchange="filtrarProcesos()"></select>
+      <select id="proceso"></select>
+      <button onclick="continuar()">Continuar</button>
+    </div>
+
+    <div id="pantalla-final" class="hidden">
+      <h2>Finalizar Producción</h2>
+      <input type="number" step="0.01" id="piezas" placeholder="Número de piezas" />
+      <button onclick="finalizar()">Finalizar</button>
+    </div>
+  </div>
+
+<script>
+let empleados = [], proyectos = [], rutasMaquinas = [], registros = [];
+let registroActual = {};
+
+async function leerCSV(path) {
+  const resp = await fetch(path);
+  const texto = await resp.text();
+  const [cab, ...filas] = texto.trim().split('\n').map(l => l.split(','));
+  return filas.map(f => Object.fromEntries(f.map((v, i) => [cab[i], v])));
+}
+
+async function inicializar() {
+  empleados = await leerCSV('empleados.csv');
+  proyectos = await leerCSV('proyectos.csv');
+  rutasMaquinas = await leerCSV('rutas_maquinas.csv');
+
+  const selEmpleado = document.getElementById('nombre-empleado');
+  empleados.forEach(e => {
+    const op = document.createElement('option');
+    op.value = e.nombre;
+    op.textContent = e.nombre;
+    selEmpleado.appendChild(op);
+  });
+
+  const selProyecto = document.getElementById('proyecto');
+  proyectos.forEach(p => {
+    const op = document.createElement('option');
+    op.value = p.proyecto;
+    op.textContent = p.proyecto;
+    selProyecto.appendChild(op);
+  });
+
+  const rutasUnicas = [...new Set(rutasMaquinas.map(r => r.ruta))];
+  const selRuta = document.getElementById('ruta');
+  rutasUnicas.forEach(r => {
+    const op = document.createElement('option');
+    op.value = r;
+    op.textContent = r;
+    selRuta.appendChild(op);
+  });
+
+  filtrarMaquinas();
+}
+
+function validarLogin() {
+  const nombre = document.getElementById('nombre-empleado').value;
+  const clave = document.getElementById('clave-empleado').value;
+  const encontrado = empleados.find(e => e.nombre === nombre && e.clave === clave);
+  if (encontrado) {
+    registroActual.nombre = nombre;
+    mostrarPantalla('pantalla-seleccion');
+  } else {
+    alert('Credenciales incorrectas');
+  }
+}
+
+function filtrarMaquinas() {
+  const rutaSel = document.getElementById('ruta').value;
+  const maquinas = rutasMaquinas.filter(r => r.ruta === rutaSel).map(r => r.maquina);
+  const selMaquina = document.getElementById('maquina');
+  selMaquina.innerHTML = '';
+  [...new Set(maquinas)].forEach(m => {
+    const op = document.createElement('option');
+    op.value = m;
+    op.textContent = m;
+    selMaquina.appendChild(op);
+  });
+  filtrarProcesos();
+}
+
+function filtrarProcesos() {
+  const rutaSel = document.getElementById('ruta').value;
+  const maqSel = document.getElementById('maquina').value;
+  const procesos = rutasMaquinas.filter(r => r.ruta === rutaSel && r.maquina === maqSel).map(r => r.proceso);
+  const selProceso = document.getElementById('proceso');
+  selProceso.innerHTML = '';
+  procesos.forEach(p => {
+    const op = document.createElement('option');
+    op.value = p;
+    op.textContent = p;
+    selProceso.appendChild(op);
+  });
+}
+
+function continuar() {
+  registroActual.proyecto = document.getElementById('proyecto').value;
+  registroActual.ruta = document.getElementById('ruta').value;
+  registroActual.maquina = document.getElementById('maquina').value;
+  registroActual.proceso = document.getElementById('proceso').value;
+  registroActual.fecha_inicio = new Date().toLocaleString();
+  mostrarPantalla('pantalla-final');
+}
+
+function finalizar() {
+  registroActual.piezas = document.getElementById('piezas').value;
+  registroActual.fecha_fin = new Date().toLocaleString();
+  registros.push({...registroActual});
+
+  fetch('https://script.google.com/macros/s/AKfycbxygWa3O6TD1YL4kJ0rJgTt_Q-YNEYLjiXpNAPWAqduGvsLiReKvmjaOacERJu-T2xffw/exec', {
+    method: 'POST',
+    body: JSON.stringify(registroActual),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => response.text())
+  .then(result => {
+    alert('Registro guardado y enviado a Google Sheets.');
+    registroActual = {};
+    document.getElementById('piezas').value = '';
+    mostrarPantalla('pantalla-login');
+  })
+  .catch(error => {
+    alert('Error al enviar: ' + error);
+  });
+}
+
+function mostrarPantalla(id) {
+  ['pantalla-login', 'pantalla-seleccion', 'pantalla-final'].forEach(pid => {
+    document.getElementById(pid).classList.add('hidden');
+  });
+  document.getElementById(id).classList.remove('hidden');
+}
+
+window.onload = inicializar;
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('service-worker.js');
+    });
+  }
+</script>
+</body>
+</html>
