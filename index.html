@@ -35,22 +35,20 @@
     border-radius: 8px;
     border: 1px solid #ccc;
   }
- button {
-  background-color: #28a745; /* Verde */
-  color: white;
-  font-weight: bold;
-  border: none;
-  cursor: pointer;
-}
-button:hover {
-  background-color: #218838; /* Verde oscuro al pasar el mouse */
-}body { font-family: sans-serif; padding: 1rem; }
-.hidden { display: none; }
-.container { max-width: 500px; margin: auto; }
-select, input, button { display: block; width: 100%; margin-bottom: 1rem; padding: 0.5rem; }
-
+  button {
+    background-color: #28a745;
+    color: white;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #218838;
+  }
+  .hidden { display: none; }
   </style>
-</head><body>
+</head>
+<body>
   <div style="text-align: center; margin-bottom: 1rem;">
     <img src="logo.png" alt="Logo" style="max-width: 100px;" />
   </div>
@@ -79,9 +77,9 @@ select, input, button { display: block; width: 100%; margin-bottom: 1rem; paddin
   <button onclick="finalizar()">Finalizar</button>
 </div>
 
-  </div><footer style="text-align:center; margin-top: 2rem; font-size: 0.9rem; color: #555;">
-  Elaborado por <strong>Yablop</strong> - Plataforma de Producción V.1
-</footer><script>
+  </div>  <footer style="text-align:center; margin-top: 2rem; font-size: 0.9rem; color: #555;">
+    Elaborado por <strong>Yablop</strong> - Plataforma de Producción V.1
+  </footer><script>
 let empleados = [], proyectos = [], rutasMaquinas = [], registros = [];
 let registroActual = {};
 
@@ -129,12 +127,6 @@ async function inicializar() {
 function validarLogin() {
   const nombre = document.getElementById('nombre-empleado').value;
   const clave = document.getElementById('clave-empleado').value;
-
-  if (!nombre || !clave) {
-    alert('Por favor complete todos los campos para iniciar sesión.');
-    return;
-  }
-
   const encontrado = empleados.find(e => e.nombre === nombre && e.clave === clave);
   if (encontrado) {
     registroActual.nombre = nombre;
@@ -189,7 +181,7 @@ function continuar() {
   const proceso = document.getElementById('proceso').value;
 
   if (!proyecto || !ruta || !maquina || !proceso) {
-    alert('Por favor seleccione todas las opciones antes de continuar.');
+    alert('Por favor, seleccione todos los campos antes de continuar.');
     return;
   }
 
@@ -205,7 +197,7 @@ function finalizar() {
   const piezas = document.getElementById('piezas').value;
 
   if (!piezas || isNaN(piezas) || parseFloat(piezas) <= 0) {
-    alert('Ingrese un número válido de piezas.');
+    alert('Ingrese un número válido de piezas antes de finalizar.');
     return;
   }
 
