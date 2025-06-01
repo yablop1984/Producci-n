@@ -190,7 +190,7 @@ function finalizar() {
   registroActual.fecha_fin = new Date().toLocaleString();
   registros.push({...registroActual});
 
-fetch('https://script.google.com/macros/s/AKfycbyjxeRNcMW4VLLbKPM5vtooGmA38VmyZpWEA59Er5K-fmi85hCSeoUqZmfAQ76wgCi3mA/exec', {
+fetch('https://script.google.com/macros/s/AKfycbyF_kPS7r7OO6wH1Y7KwAw90F9Zj3ojIfP6MXVLyOkIvNoiXEy9VTguT7JnY0h6Rq8OlQ/exec', {
   method: 'POST',
   body: JSON.stringify(registroActual),
   headers: {
