@@ -194,7 +194,6 @@ function finalizar() {
   registros.push({...registroActual});
 
 fetch(window.API_URL + '/api/enviar', {
-
   method: 'POST',
   body: JSON.stringify(registroActual),
   headers: {
