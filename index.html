@@ -200,7 +200,7 @@ fetch('https://script.google.com/macros/s/AKfycbx5AxtL_nSmCZjs2bQXTA_bHj9mF9pN2O
 
   .then(response => response.text())
   .then(result => {
-    alert('Registro guardado y enviado a Google Sheets.');
+    alert('Registro guardado y enviado a la base.');
     registroActual = {};
     document.getElementById('piezas').value = '';
     mostrarPantalla('pantalla-login');
