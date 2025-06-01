@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <script>
+  window.API_URL = "https://tu-api-en-vercel.vercel.app";
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Captura Producción Bugel</title>
@@ -190,7 +193,8 @@ function finalizar() {
   registroActual.fecha_fin = new Date().toLocaleString();
   registros.push({...registroActual});
 
-fetch('https://script.google.com/macros/s/AKfycbx5AxtL_nSmCZjs2bQXTA_bHj9mF9pN2OAjc5cFBL5qhJWg1fCPyJYo4ba5cmrvsXy9qA/exec', {
+fetch(window.API_URL + '/api/enviar', {
+
   method: 'POST',
   body: JSON.stringify(registroActual),
   headers: {
