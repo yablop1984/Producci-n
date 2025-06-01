@@ -1,21 +1,28 @@
-
-const CACHE_NAME = "bugel-pwa-cache-v1";
+const CACHE_NAME = "bugel-cache-v1";
 const urlsToCache = [
   "/",
   "/index.html",
+  "/logo.png",
+  "/manifest.json",
   "/empleados.csv",
   "/proyectos.csv",
   "/rutas_maquinas.csv"
 ];
 
-self.addEventListener("install", event => {
+self.addEventListener("install", function(event) {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME)
+      .then(function(cache) {
+        return cache.addAll(urlsToCache);
+      })
   );
 });
 
-self.addEventListener("fetch", event => {
+self.addEventListener("fetch", function(event) {
   event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
+    caches.match(event.request)
+      .then(function(response) {
+        return response || fetch(event.request);
+      })
   );
 });
