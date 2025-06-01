@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
+<!DOCTYPE html><html lang="es">
 <head>
   <script>
   window.API_URL = "https://bugel-backend.vercel.app";
@@ -45,30 +44,13 @@
 }
 button:hover {
   background-color: #218838; /* Verde oscuro al pasar el mouse */
-}
+}body { font-family: sans-serif; padding: 1rem; }
+.hidden { display: none; }
+.container { max-width: 500px; margin: auto; }
+select, input, button { display: block; width: 100%; margin-bottom: 1rem; padding: 0.5rem; }
 
-    body { font-family: sans-serif; padding: 1rem; }
-    .hidden { display: none; }
-    .container { max-width: 500px; margin: auto; }
-    select, input, button { display: block; width: 100%; margin-bottom: 1rem; padding: 0.5rem; }
   </style>
-</head>
-
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('service-worker.js');
-    });
-  }
-</script>
-
-<footer style="text-align:center; margin-top: 2rem; font-size: 0.9rem; color: #555;">
-  Elaborado por <strong>Yablop</strong> - Plataforma de Producción V.1
-</footer>
-</body>
-</html>
-
-<body>
+</head><body>
   <div style="text-align: center; margin-bottom: 1rem;">
     <img src="logo.png" alt="Logo" style="max-width: 100px;" />
   </div>
@@ -78,29 +60,28 @@ button:hover {
       <select id="nombre-empleado"></select>
       <input type="password" id="clave-empleado" placeholder="Clave" />
       <button onclick="validarLogin()">Ingresar</button>
-    </div>
+    </div><div id="pantalla-seleccion" class="hidden">
+  <h2>Producción</h2>
+  <label for="proyecto">Proyecto:</label>
+  <select id="proyecto"><option value="">Seleccione un proyecto</option></select>
+  <label for="ruta">Ruta:</label>
+  <select id="ruta" onchange="filtrarMaquinas()" disabled><option value="">Seleccione una ruta</option></select>
+  <label for="maquina">Máquina:</label>
+  <select id="maquina" onchange="filtrarProcesos()" disabled><option value="">Seleccione una máquina</option></select>
+  <label for="proceso">Proceso:</label>
+  <select id="proceso" disabled><option value="">Seleccione un proceso</option></select>
+  <button onclick="continuar()">Continuar</button>
+</div>
 
-    <div id="pantalla-seleccion" class="hidden">
-      <h2>Producción</h2>
-      <label for="proyecto">Proyecto:</label>
-      <select id="proyecto"><option value="">Seleccione un proyecto</option></select>
-      <label for="ruta">Ruta:</label>
-      <select id="ruta" onchange="filtrarMaquinas()" disabled><option value="">Seleccione una ruta</option></select>
-      <label for="maquina">Máquina:</label>
-      <select id="maquina" onchange="filtrarProcesos()" disabled><option value="">Seleccione una máquina</option></select>
-      <label for="proceso">Proceso:</label>
-      <select id="proceso" disabled><option value="">Seleccione un proceso</option></select>
-      <button onclick="continuar()">Continuar</button>
-    </div>
+<div id="pantalla-final" class="hidden">
+  <h2>Finalizar Producción</h2>
+  <input type="number" step="0.01" id="piezas" placeholder="Número de piezas" />
+  <button onclick="finalizar()">Finalizar</button>
+</div>
 
-    <div id="pantalla-final" class="hidden">
-      <h2>Finalizar Producción</h2>
-      <input type="number" step="0.01" id="piezas" placeholder="Número de piezas" />
-      <button onclick="finalizar()">Finalizar</button>
-    </div>
-  </div>
-
-<script>
+  </div><footer style="text-align:center; margin-top: 2rem; font-size: 0.9rem; color: #555;">
+  Elaborado por <strong>Yablop</strong> - Plataforma de Producción V.1
+</footer><script>
 let empleados = [], proyectos = [], rutasMaquinas = [], registros = [];
 let registroActual = {};
 
@@ -148,6 +129,12 @@ async function inicializar() {
 function validarLogin() {
   const nombre = document.getElementById('nombre-empleado').value;
   const clave = document.getElementById('clave-empleado').value;
+
+  if (!nombre || !clave) {
+    alert('Por favor complete todos los campos para iniciar sesión.');
+    return;
+  }
+
   const encontrado = empleados.find(e => e.nombre === nombre && e.clave === clave);
   if (encontrado) {
     registroActual.nombre = nombre;
@@ -172,7 +159,7 @@ function filtrarMaquinas() {
     op.value = m;
     op.textContent = m;
     selMaquina.appendChild(op);
-      document.getElementById('maquina').disabled = false;
+    document.getElementById('maquina').disabled = false;
   });
   filtrarProcesos();
 }
@@ -191,32 +178,48 @@ function filtrarProcesos() {
     op.value = p;
     op.textContent = p;
     selProceso.appendChild(op);
-      document.getElementById('proceso').disabled = false;
+    document.getElementById('proceso').disabled = false;
   });
 }
 
 function continuar() {
-  registroActual.proyecto = document.getElementById('proyecto').value;
-  registroActual.ruta = document.getElementById('ruta').value;
-  registroActual.maquina = document.getElementById('maquina').value;
-  registroActual.proceso = document.getElementById('proceso').value;
+  const proyecto = document.getElementById('proyecto').value;
+  const ruta = document.getElementById('ruta').value;
+  const maquina = document.getElementById('maquina').value;
+  const proceso = document.getElementById('proceso').value;
+
+  if (!proyecto || !ruta || !maquina || !proceso) {
+    alert('Por favor seleccione todas las opciones antes de continuar.');
+    return;
+  }
+
+  registroActual.proyecto = proyecto;
+  registroActual.ruta = ruta;
+  registroActual.maquina = maquina;
+  registroActual.proceso = proceso;
   registroActual.fecha_inicio = new Date().toLocaleString();
   mostrarPantalla('pantalla-final');
 }
 
 function finalizar() {
-  registroActual.piezas = document.getElementById('piezas').value;
+  const piezas = document.getElementById('piezas').value;
+
+  if (!piezas || isNaN(piezas) || parseFloat(piezas) <= 0) {
+    alert('Ingrese un número válido de piezas.');
+    return;
+  }
+
+  registroActual.piezas = piezas;
   registroActual.fecha_fin = new Date().toLocaleString();
   registros.push({...registroActual});
 
-fetch(window.API_URL + '/api/enviar', {
-  method: 'POST',
-  body: JSON.stringify(registroActual),
-  headers: {
-    'Content-Type': 'application/json'
-  }
-})
-
+  fetch(window.API_URL + '/api/enviar', {
+    method: 'POST',
+    body: JSON.stringify(registroActual),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
   .then(response => response.text())
   .then(result => {
     alert('Registro guardado y enviado a la base.');
@@ -237,13 +240,11 @@ function mostrarPantalla(id) {
 }
 
 window.onload = inicializar;
-</script>
-<script>
+</script><script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
       navigator.serviceWorker.register('service-worker.js');
     });
   }
-</script>
-</body>
+</script></body>
 </html>
