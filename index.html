@@ -1,51 +1,80 @@
 <!DOCTYPE html><html lang="es">
 <head>
   <script>
-  window.API_URL = "https://bugel-backend.vercel.app";
+    window.API_URL = "https://bugel-backend.vercel.app";
   </script>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Captura Producción Bugel</title>
   <link rel="manifest" href="manifest.json">
   <style>
-  body {
-    font-family: sans-serif;
-    padding: 1rem;
-    background-color: #f2f5f9;
-  }
-  .container {
-    max-width: 500px;
-    margin: auto;
-    background-color: #ffffff;
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-  label {
-    font-weight: bold;
-    display: block;
-    margin-bottom: 0.2rem;
-    color: #333333;
-  }
-  select, input, button {
-    width: 100%;
-    margin-bottom: 1rem;
-    padding: 0.6rem;
-    font-size: 1rem;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-  }
-  button {
-    background-color: #28a745;
-    color: white;
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
-  }
-  button:hover {
-    background-color: #218838;
-  }
-  .hidden { display: none; }
+    body {
+      font-family: sans-serif;
+      padding: 1rem;
+      background-color: #f2f5f9;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background-color: #ffffff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 0.2rem;
+      color: #333333;
+    }
+    select, input, button {
+      width: 100%;
+      margin-bottom: 1rem;
+      padding: 0.6rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    .hidden { display: none; }/* Modal */
+.modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.modal-content {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  text-align: center;
+  width: 80%;
+  max-width: 300px;
+}
+.modal button {
+  margin-top: 1rem;
+  background-color: #28a745;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
   </style>
 </head>
 <body>
@@ -77,166 +106,167 @@
   <button onclick="finalizar()">Finalizar</button>
 </div>
 
+  </div>  <div id="modal-mensaje" class="modal hidden">
+    <div class="modal-content">
+      <p id="modal-texto"></p>
+      <button onclick="cerrarModal()">Aceptar</button>
+    </div>
   </div>  <footer style="text-align:center; margin-top: 2rem; font-size: 0.9rem; color: #555;">
     Elaborado por <strong>Yablop</strong> - Plataforma de Producción V.1
-  </footer><script>
-let empleados = [], proyectos = [], rutasMaquinas = [], registros = [];
-let registroActual = {};
+  </footer>  <script>
+    let empleados = [], proyectos = [], rutasMaquinas = [], registros = [];
+    let registroActual = {};
 
-async function leerCSV(path) {
-  const resp = await fetch(path);
-  const texto = await resp.text();
-  const [cab, ...filas] = texto.trim().split('\n').map(l => l.split(','));
-  return filas.map(f => Object.fromEntries(f.map((v, i) => [cab[i], v])));
-}
-
-async function inicializar() {
-  empleados = await leerCSV('empleados.csv');
-  proyectos = await leerCSV('proyectos.csv');
-  rutasMaquinas = await leerCSV('rutas_maquinas.csv');
-
-  const selEmpleado = document.getElementById('nombre-empleado');
-  empleados.forEach(e => {
-    const op = document.createElement('option');
-    op.value = e.nombre;
-    op.textContent = e.nombre;
-    selEmpleado.appendChild(op);
-  });
-
-  const selProyecto = document.getElementById('proyecto');
-  proyectos.forEach(p => {
-    const op = document.createElement('option');
-    op.value = p.proyecto;
-    op.textContent = p.proyecto;
-    selProyecto.appendChild(op);
-  });
-
-  const rutasUnicas = [...new Set(rutasMaquinas.map(r => r.ruta))];
-  const selRuta = document.getElementById('ruta');
-  rutasUnicas.forEach(r => {
-    document.getElementById('ruta').disabled = false;
-    const op = document.createElement('option');
-    op.value = r;
-    op.textContent = r;
-    selRuta.appendChild(op);
-  });
-
-  filtrarMaquinas();
-}
-
-function validarLogin() {
-  const nombre = document.getElementById('nombre-empleado').value;
-  const clave = document.getElementById('clave-empleado').value;
-  const encontrado = empleados.find(e => e.nombre === nombre && e.clave === clave);
-  if (encontrado) {
-    registroActual.nombre = nombre;
-    mostrarPantalla('pantalla-seleccion');
-  } else {
-    alert('Credenciales incorrectas');
-  }
-}
-
-function filtrarMaquinas() {
-  document.getElementById('maquina').disabled = true;
-  document.getElementById('proceso').disabled = true;
-  document.getElementById('maquina').innerHTML = '<option value="">Seleccione una máquina</option>';
-  document.getElementById('proceso').innerHTML = '<option value="">Seleccione un proceso</option>';
-
-  const rutaSel = document.getElementById('ruta').value;
-  const maquinas = rutasMaquinas.filter(r => r.ruta === rutaSel).map(r => r.maquina);
-  const selMaquina = document.getElementById('maquina');
-  selMaquina.innerHTML = '';
-  [...new Set(maquinas)].forEach(m => {
-    const op = document.createElement('option');
-    op.value = m;
-    op.textContent = m;
-    selMaquina.appendChild(op);
-    document.getElementById('maquina').disabled = false;
-  });
-  filtrarProcesos();
-}
-
-function filtrarProcesos() {
-  document.getElementById('proceso').disabled = true;
-  document.getElementById('proceso').innerHTML = '<option value="">Seleccione un proceso</option>';
-
-  const rutaSel = document.getElementById('ruta').value;
-  const maqSel = document.getElementById('maquina').value;
-  const procesos = rutasMaquinas.filter(r => r.ruta === rutaSel && r.maquina === maqSel).map(r => r.proceso);
-  const selProceso = document.getElementById('proceso');
-  selProceso.innerHTML = '';
-  procesos.forEach(p => {
-    const op = document.createElement('option');
-    op.value = p;
-    op.textContent = p;
-    selProceso.appendChild(op);
-    document.getElementById('proceso').disabled = false;
-  });
-}
-
-function continuar() {
-  const proyecto = document.getElementById('proyecto').value;
-  const ruta = document.getElementById('ruta').value;
-  const maquina = document.getElementById('maquina').value;
-  const proceso = document.getElementById('proceso').value;
-
-  if (!proyecto || !ruta || !maquina || !proceso) {
-    alert('Por favor, seleccione todos los campos antes de continuar.');
-    return;
-  }
-
-  registroActual.proyecto = proyecto;
-  registroActual.ruta = ruta;
-  registroActual.maquina = maquina;
-  registroActual.proceso = proceso;
-  registroActual.fecha_inicio = new Date().toLocaleString();
-  mostrarPantalla('pantalla-final');
-}
-
-function finalizar() {
-  const piezas = document.getElementById('piezas').value;
-
-  if (!piezas || isNaN(piezas) || parseFloat(piezas) <= 0) {
-    alert('Ingrese un número válido de piezas antes de finalizar.');
-    return;
-  }
-
-  registroActual.piezas = piezas;
-  registroActual.fecha_fin = new Date().toLocaleString();
-  registros.push({...registroActual});
-
-  fetch(window.API_URL + '/api/enviar', {
-    method: 'POST',
-    body: JSON.stringify(registroActual),
-    headers: {
-      'Content-Type': 'application/json'
+    async function leerCSV(path) {
+      const resp = await fetch(path);
+      const texto = await resp.text();
+      const [cab, ...filas] = texto.trim().split('\n').map(l => l.split(','));
+      return filas.map(f => Object.fromEntries(f.map((v, i) => [cab[i], v])));
     }
-  })
-  .then(response => response.text())
-  .then(result => {
-    alert('Registro guardado y enviado a la base.');
-    registroActual = {};
-    document.getElementById('piezas').value = '';
-    mostrarPantalla('pantalla-login');
-  })
-  .catch(error => {
-    alert('Error al enviar: ' + error);
-  });
-}
 
-function mostrarPantalla(id) {
-  ['pantalla-login', 'pantalla-seleccion', 'pantalla-final'].forEach(pid => {
-    document.getElementById(pid).classList.add('hidden');
-  });
-  document.getElementById(id).classList.remove('hidden');
-}
+    async function inicializar() {
+      empleados = await leerCSV('empleados.csv');
+      proyectos = await leerCSV('proyectos.csv');
+      rutasMaquinas = await leerCSV('rutas_maquinas.csv');
 
-window.onload = inicializar;
-</script><script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('service-worker.js');
-    });
-  }
-</script></body>
+      const selEmpleado = document.getElementById('nombre-empleado');
+      empleados.forEach(e => {
+        const op = document.createElement('option');
+        op.value = e.nombre;
+        op.textContent = e.nombre;
+        selEmpleado.appendChild(op);
+      });
+
+      const selProyecto = document.getElementById('proyecto');
+      proyectos.forEach(p => {
+        const op = document.createElement('option');
+        op.value = p.proyecto;
+        op.textContent = p.proyecto;
+        selProyecto.appendChild(op);
+      });
+
+      const rutasUnicas = [...new Set(rutasMaquinas.map(r => r.ruta))];
+      const selRuta = document.getElementById('ruta');
+      rutasUnicas.forEach(r => {
+        document.getElementById('ruta').disabled = false;
+        const op = document.createElement('option');
+        op.value = r;
+        op.textContent = r;
+        selRuta.appendChild(op);
+      });
+
+      filtrarMaquinas();
+    }
+
+    function validarLogin() {
+      const nombre = document.getElementById('nombre-empleado').value;
+      const clave = document.getElementById('clave-empleado').value;
+      if (!nombre || !clave) return mostrarModal('Debe ingresar su nombre y clave');
+      const encontrado = empleados.find(e => e.nombre === nombre && e.clave === clave);
+      if (encontrado) {
+        registroActual.nombre = nombre;
+        mostrarPantalla('pantalla-seleccion');
+      } else {
+        mostrarModal('Credenciales incorrectas');
+      }
+    }
+
+    function filtrarMaquinas() {
+      document.getElementById('maquina').disabled = true;
+      document.getElementById('proceso').disabled = true;
+      document.getElementById('maquina').innerHTML = '<option value="">Seleccione una máquina</option>';
+      document.getElementById('proceso').innerHTML = '<option value="">Seleccione un proceso</option>';
+
+      const rutaSel = document.getElementById('ruta').value;
+      const maquinas = rutasMaquinas.filter(r => r.ruta === rutaSel).map(r => r.maquina);
+      const selMaquina = document.getElementById('maquina');
+      selMaquina.innerHTML = '';
+      [...new Set(maquinas)].forEach(m => {
+        const op = document.createElement('option');
+        op.value = m;
+        op.textContent = m;
+        selMaquina.appendChild(op);
+        document.getElementById('maquina').disabled = false;
+      });
+      filtrarProcesos();
+    }
+
+    function filtrarProcesos() {
+      document.getElementById('proceso').disabled = true;
+      document.getElementById('proceso').innerHTML = '<option value="">Seleccione un proceso</option>';
+
+      const rutaSel = document.getElementById('ruta').value;
+      const maqSel = document.getElementById('maquina').value;
+      const procesos = rutasMaquinas.filter(r => r.ruta === rutaSel && r.maquina === maqSel).map(r => r.proceso);
+      const selProceso = document.getElementById('proceso');
+      selProceso.innerHTML = '';
+      procesos.forEach(p => {
+        const op = document.createElement('option');
+        op.value = p;
+        op.textContent = p;
+        selProceso.appendChild(op);
+        document.getElementById('proceso').disabled = false;
+      });
+    }
+
+    function continuar() {
+      const proyecto = document.getElementById('proyecto').value;
+      const ruta = document.getElementById('ruta').value;
+      const maquina = document.getElementById('maquina').value;
+      const proceso = document.getElementById('proceso').value;
+      if (!proyecto || !ruta || !maquina || !proceso) return mostrarModal('Complete todos los campos antes de continuar');
+      registroActual.proyecto = proyecto;
+      registroActual.ruta = ruta;
+      registroActual.maquina = maquina;
+      registroActual.proceso = proceso;
+      registroActual.fecha_inicio = new Date().toLocaleString();
+      mostrarPantalla('pantalla-final');
+    }
+
+    function finalizar() {
+      const piezas = document.getElementById('piezas').value;
+      if (!piezas || isNaN(piezas) || Number(piezas) <= 0) return mostrarModal('Ingrese un número válido de piezas antes de finalizar.');
+      registroActual.piezas = piezas;
+      registroActual.fecha_fin = new Date().toLocaleString();
+      registros.push({...registroActual});
+
+      fetch(window.API_URL + '/api/enviar', {
+        method: 'POST',
+        body: JSON.stringify(registroActual),
+        headers: { 'Content-Type': 'application/json' }
+      })
+        .then(response => response.text())
+        .then(result => {
+          mostrarModal('Registro guardado y enviado a la base.');
+          registroActual = {};
+          document.getElementById('piezas').value = '';
+          mostrarPantalla('pantalla-login');
+        })
+        .catch(error => mostrarModal('Error al enviar: ' + error));
+    }
+
+    function mostrarPantalla(id) {
+      ['pantalla-login', 'pantalla-seleccion', 'pantalla-final'].forEach(pid => {
+        document.getElementById(pid).classList.add('hidden');
+      });
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function mostrarModal(mensaje) {
+      document.getElementById('modal-texto').textContent = mensaje;
+      document.getElementById('modal-mensaje').classList.remove('hidden');
+    }
+
+    function cerrarModal() {
+      document.getElementById('modal-mensaje').classList.add('hidden');
+    }
+
+    window.onload = inicializar;
+  </script>  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('service-worker.js');
+      });
+    }
+  </script></body>
 </html>
