@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
+<!DOCTYPE html><html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -53,6 +52,22 @@
       font-size: 0.9rem;
       color: #555;
     }
+    #modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    #modal-content {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      text-align: center;
+      max-width: 300px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
   </style>
   <script>
     window.API_URL = "https://bugel-backend.vercel.app";
@@ -60,6 +75,13 @@
       window.addEventListener('load', function () {
         navigator.serviceWorker.register('service-worker.js');
       });
+    }
+    function mostrarAlerta(mensaje) {
+      document.getElementById("modal-text").innerText = mensaje;
+      document.getElementById("modal").style.display = "flex";
+    }
+    function cerrarAlerta() {
+      document.getElementById("modal").style.display = "none";
     }
   </script>
 </head>
@@ -73,32 +95,34 @@
       <select id="nombre-empleado"></select>
       <input type="password" id="clave-empleado" placeholder="Clave" />
       <button onclick="validarLogin()">Ingresar</button>
-    </div>
+    </div><div id="pantalla-seleccion" class="hidden">
+  <h2>Producción</h2>
+  <label for="proyecto">Proyecto:</label>
+  <select id="proyecto"><option value="">Seleccione un proyecto</option></select>
+  <label for="ruta">Ruta:</label>
+  <select id="ruta" onchange="filtrarMaquinas()" disabled><option value="">Seleccione una ruta</option></select>
+  <label for="maquina">Máquina:</label>
+  <select id="maquina" onchange="filtrarProcesos()" disabled><option value="">Seleccione una máquina</option></select>
+  <label for="proceso">Proceso:</label>
+  <select id="proceso" disabled><option value="">Seleccione un proceso</option></select>
+  <button onclick="continuar()">Continuar</button>
+</div>
 
-    <div id="pantalla-seleccion" class="hidden">
-      <h2>Producción</h2>
-      <label for="proyecto">Proyecto:</label>
-      <select id="proyecto"><option value="">Seleccione un proyecto</option></select>
-      <label for="ruta">Ruta:</label>
-      <select id="ruta" onchange="filtrarMaquinas()" disabled><option value="">Seleccione una ruta</option></select>
-      <label for="maquina">Máquina:</label>
-      <select id="maquina" onchange="filtrarProcesos()" disabled><option value="">Seleccione una máquina</option></select>
-      <label for="proceso">Proceso:</label>
-      <select id="proceso" disabled><option value="">Seleccione un proceso</option></select>
-      <button onclick="continuar()">Continuar</button>
-    </div>
+<div id="pantalla-final" class="hidden">
+  <h2>Finalizar Producción</h2>
+  <input type="number" step="0.01" id="piezas" placeholder="Número de piezas" />
+  <button onclick="finalizar()">Finalizar</button>
+</div>
 
-    <div id="pantalla-final" class="hidden">
-      <h2>Finalizar Producción</h2>
-      <input type="number" step="0.01" id="piezas" placeholder="Número de piezas" />
-      <button onclick="finalizar()">Finalizar</button>
-    </div>
   </div>
   <footer>
     Elaborado por <strong>Yablop</strong> - Plataforma de Producción V.1
-  </footer>
-
-<script>
+  </footer>  <div id="modal">
+    <div id="modal-content">
+      <p id="modal-text"></p>
+      <button onclick="cerrarAlerta()">Aceptar</button>
+    </div>
+  </div><script>
 let empleados = [], proyectos = [], rutasMaquinas = [], registros = [];
 let registroActual = {};
 
@@ -144,13 +168,13 @@ async function inicializar() {
 function validarLogin() {
   const nombre = document.getElementById('nombre-empleado').value;
   const clave = document.getElementById('clave-empleado').value;
-  if (!nombre || !clave) return alert('Debe seleccionar nombre y clave.');
+  if (!nombre || !clave) return mostrarAlerta('Debe seleccionar nombre y clave.');
   const encontrado = empleados.find(e => e.nombre === nombre && e.clave === clave);
   if (encontrado) {
     registroActual.nombre = nombre;
     mostrarPantalla('pantalla-seleccion');
   } else {
-    alert('Credenciales incorrectas');
+    mostrarAlerta('Credenciales incorrectas');
   }
 }
 
@@ -196,7 +220,7 @@ function continuar() {
   const r = document.getElementById('ruta').value;
   const m = document.getElementById('maquina').value;
   const pr = document.getElementById('proceso').value;
-  if (!p || !r || !m || !pr) return alert('Todos los campos deben estar completos.');
+  if (!p || !r || !m || !pr) return mostrarAlerta('Todos los campos deben estar completos.');
   registroActual.proyecto = p;
   registroActual.ruta = r;
   registroActual.maquina = m;
@@ -208,7 +232,7 @@ function continuar() {
 function finalizar() {
   const piezas = document.getElementById('piezas').value;
   if (!piezas || parseFloat(piezas) <= 0) {
-    alert('Ingrese un número válido de piezas antes de finalizar.');
+    mostrarAlerta('Ingrese un número válido de piezas antes de finalizar.');
     return;
   }
   registroActual.piezas = piezas;
@@ -222,12 +246,12 @@ function finalizar() {
   })
     .then(r => r.text())
     .then(() => {
-      alert('Registro guardado exitosamente.');
+      mostrarAlerta('Registro guardado exitosamente.');
       registroActual = {};
       document.getElementById('piezas').value = '';
       mostrarPantalla('pantalla-login');
     })
-    .catch(e => alert('Error al enviar los datos: ' + e.message));
+    .catch(e => mostrarAlerta('Error al enviar los datos: ' + e.message));
 }
 
 function mostrarPantalla(id) {
@@ -238,6 +262,5 @@ function mostrarPantalla(id) {
 }
 
 window.onload = inicializar;
-</script>
-</body>
+</script></body>
 </html>
