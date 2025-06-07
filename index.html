@@ -53,7 +53,6 @@
       font-size: 0.9rem;
       color: #555;
     }
-    /* Modal personalizado */
     #modal {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -67,7 +66,6 @@
       background: white;
       padding: 1.5rem;
       border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
       text-align: center;
     }
     #modalContent button {
@@ -75,14 +73,6 @@
       background-color: #28a745;
     }
   </style>
-  <script>
-    window.API_URL = "https://bugel-backend.vercel.app";
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('service-worker.js');
-      });
-    }
-  </script>
 </head>
 <body>
   <div style="text-align: center; margin-bottom: 1rem;">
@@ -128,164 +118,143 @@
     Elaborado por <strong>Yablop</strong> - Plataforma de Producción V.1
   </footer>
 
-<script>
-let empleados = [], proyectos = [], rutasMaquinas = [], registros = [];
-let registroActual = {};
+  <script>
+    window.API_URL = "https://bugel-backend.vercel.app";
+    let empleados = [], proyectos = [], rutasMaquinas = [], registros = [];
+    let registroActual = {};
 
-function mostrarModal(mensaje) {
-  document.getElementById('modalMensaje').innerText = mensaje;
-  document.getElementById('modal').classList.remove('hidden');
-}
+    function mostrarModal(mensaje) {
+      document.getElementById('modalMensaje').innerText = mensaje;
+      document.getElementById('modal').classList.remove('hidden');
+    }
 
-function cerrarModal() {
-  document.getElementById('modal').classList.add('hidden');
-}
+    function cerrarModal() {
+      document.getElementById('modal').classList.add('hidden');
+    }
 
-async function leerCSV(path) {
-  const resp = await fetch(path);
-  const texto = await resp.text();
-  const [cab, ...filas] = texto.trim().split('\n').map(l => l.split(','));
-  return filas.map(f => Object.fromEntries(f.map((v, i) => [cab[i], v])));
-}
+    async function leerCSV(path) {
+      const resp = await fetch(path);
+      const texto = await resp.text();
+      const [cab, ...filas] = texto.trim().split('\n').map(l => l.split(','));
+      return filas.map(f => Object.fromEntries(f.map((v, i) => [cab[i], v])));
+    }
 
-async function inicializar() {
-  empleados = await leerCSV('empleados.csv');
-  proyectos = await leerCSV('proyectos.csv');
-  rutasMaquinas = await leerCSV('rutas_maquinas.csv');
+    async function inicializar() {
+      empleados = await leerCSV('empleados.csv');
+      proyectos = await leerCSV('proyectos.csv');
+      rutasMaquinas = await leerCSV('rutas_maquinas.csv');
 
-  const selEmpleado = document.getElementById('nombre-empleado');
-  empleados.forEach(e => {
-    const op = document.createElement('option');
-    op.value = e.nombre;
-    op.textContent = e.nombre;
-    selEmpleado.appendChild(op);
-  });
+      empleados.forEach(e => {
+        const op = document.createElement('option');
+        op.value = e.nombre;
+        op.textContent = e.nombre;
+        document.getElementById('nombre-empleado').appendChild(op);
+      });
 
-  const selProyecto = document.getElementById('proyecto');
-  proyectos.forEach(p => {
-    const op = document.createElement('option');
-    op.value = p.proyecto;
-    op.textContent = p.proyecto;
-    selProyecto.appendChild(op);
-  });
+      proyectos.forEach(p => {
+        const op = document.createElement('option');
+        op.value = p.proyecto;
+        op.textContent = p.proyecto;
+        document.getElementById('proyecto').appendChild(op);
+      });
 
-  const rutasUnicas = [...new Set(rutasMaquinas.map(r => r.ruta))];
-  const selRuta = document.getElementById('ruta');
-  rutasUnicas.forEach(r => {
-    const op = document.createElement('option');
-    op.value = r;
-    op.textContent = r;
-    selRuta.appendChild(op);
-  });
-  selRuta.disabled = false;
-}
+      const rutasUnicas = [...new Set(rutasMaquinas.map(r => r.ruta))];
+      rutasUnicas.forEach(r => {
+        const op = document.createElement('option');
+        op.value = r;
+        op.textContent = r;
+        document.getElementById('ruta').appendChild(op);
+      });
+      document.getElementById('ruta').disabled = false;
+    }
 
-function validarLogin() {
-  const nombre = document.getElementById('nombre-empleado').value;
-  const clave = document.getElementById('clave-empleado').value;
-  if (!nombre || !clave) return mostrarModal('Debe seleccionar nombre y clave.');
-  const encontrado = empleados.find(e => e.nombre === nombre && e.clave === clave);
-  if (encontrado) {
-    registroActual.nombre = nombre;
-    mostrarPantalla('pantalla-seleccion');
-  } else {
-    mostrarModal('Credenciales incorrectas');
-  }
-}
+    function validarLogin() {
+      const nombre = document.getElementById('nombre-empleado').value;
+      const clave = document.getElementById('clave-empleado').value;
+      const encontrado = empleados.find(e => e.nombre === nombre && e.clave === clave);
+      if (!nombre || !clave) return mostrarModal('Debe seleccionar nombre y clave.');
+      if (!encontrado) return mostrarModal('Credenciales incorrectas.');
+      registroActual.nombre = nombre;
+      mostrarPantalla('pantalla-seleccion');
+    }
 
-function filtrarMaquinas() {
-  const rutaSel = document.getElementById('ruta').value;
-  const selMaquina = document.getElementById('maquina');
-  selMaquina.innerHTML = '<option value="">Seleccione una máquina</option>';
-  document.getElementById('proceso').innerHTML = '<option value="">Seleccione un proceso</option>';
-  selMaquina.disabled = true;
-  document.getElementById('proceso').disabled = true;
+    function filtrarMaquinas() {
+      const rutaSel = document.getElementById('ruta').value;
+      const selMaquina = document.getElementById('maquina');
+      selMaquina.innerHTML = '<option value="">Seleccione una máquina</option>';
+      document.getElementById('proceso').innerHTML = '<option value="">Seleccione un proceso</option>';
+      selMaquina.disabled = true;
+      document.getElementById('proceso').disabled = true;
 
-  if (!rutaSel) return;
-  const maquinas = [...new Set(rutasMaquinas.filter(r => r.ruta === rutaSel).map(r => r.maquina))];
-  maquinas.forEach(m => {
-    const op = document.createElement('option');
-    op.value = m;
-    op.textContent = m;
-    selMaquina.appendChild(op);
-  });
-  selMaquina.disabled = false;
-}
+      if (!rutaSel) return;
+      const maquinas = [...new Set(rutasMaquinas.filter(r => r.ruta === rutaSel).map(r => r.maquina))];
+      maquinas.forEach(m => {
+        const op = document.createElement('option');
+        op.value = m;
+        op.textContent = m;
+        selMaquina.appendChild(op);
+      });
+      selMaquina.disabled = false;
+    }
 
-function filtrarProcesos() {
-  const rutaSel = document.getElementById('ruta').value;
-  const maqSel = document.getElementById('maquina').value;
-  const selProceso = document.getElementById('proceso');
-  selProceso.innerHTML = '<option value="">Seleccione un proceso</option>';
-  selProceso.disabled = true;
+    function filtrarProcesos() {
+      const rutaSel = document.getElementById('ruta').value;
+      const maqSel = document.getElementById('maquina').value;
+      const selProceso = document.getElementById('proceso');
+      selProceso.innerHTML = '<option value="">Seleccione un proceso</option>';
+      selProceso.disabled = true;
 
-  if (!maqSel) return;
-  const procesos = rutasMaquinas.filter(r => r.ruta === rutaSel && r.maquina === maqSel).map(r => r.proceso);
-  procesos.forEach(p => {
-    const op = document.createElement('option');
-    op.value = p;
-    op.textContent = p;
-    selProceso.appendChild(op);
-  });
-  selProceso.disabled = false;
-}
+      if (!maqSel) return;
+      const procesos = rutasMaquinas.filter(r => r.ruta === rutaSel && r.maquina === maqSel).map(r => r.proceso);
+      procesos.forEach(p => {
+        const op = document.createElement('option');
+        op.value = p;
+        op.textContent = p;
+        selProceso.appendChild(op);
+      });
+      selProceso.disabled = false;
+    }
 
-function continuar() {
-  const p = document.getElementById('proyecto').value;
-  const r = document.getElementById('ruta').value;
-  const m = document.getElementById('maquina').value;
-  const pr = document.getElementById('proceso').value;
-  if (!p || !r || !m || !pr) return mostrarModal('Todos los campos deben estar completos.');
-  registroActual.proyecto = p;
-  registroActual.ruta = r;
-  registroActual.maquina = m;
-  registroActual.proceso = pr;
-  registroActual.fecha_inicio = new Date().toLocaleString();
+    function continuar() {
+      const p = document.getElementById('proyecto').value;
+      const r = document.getElementById('ruta').value;
+      const m = document.getElementById('maquina').value;
+      const pr = document.getElementById('proceso').value;
+      if (!p || !r || !m || !pr) return mostrarModal('Todos los campos deben estar completos.');
+      registroActual = { ...registroActual, proyecto: p, ruta: r, maquina: m, proceso: pr, fecha_inicio: new Date().toLocaleString() };
+      document.getElementById('resumen').innerHTML = `<strong>Empleado:</strong> ${registroActual.nombre}<br><strong>Ruta:</strong> ${r}<br><strong>Máquina:</strong> ${m}<br><strong>Proceso:</strong> ${pr}`;
+      mostrarPantalla('pantalla-final');
+    }
 
-  document.getElementById('resumen').innerHTML =
-    `<strong>Empleado:</strong> ${registroActual.nombre}<br>` +
-    `<strong>Ruta:</strong> ${r}<br>` +
-    `<strong>Máquina:</strong> ${m}<br>` +
-    `<strong>Proceso:</strong> ${pr}`;
+    function finalizar() {
+      const piezas = document.getElementById('piezas').value;
+      if (!piezas || parseFloat(piezas) <= 0) return mostrarModal('Ingrese un número válido de piezas.');
+      registroActual.piezas = piezas;
+      registroActual.fecha_fin = new Date().toLocaleString();
+      registros.push({ ...registroActual });
+      fetch(window.API_URL + '/api/enviar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(registroActual)
+      })
+        .then(r => r.text())
+        .then(() => {
+          mostrarModal('Registro guardado exitosamente.');
+          registroActual = {};
+          document.getElementById('piezas').value = '';
+          mostrarPantalla('pantalla-login');
+        })
+        .catch(e => mostrarModal('Error al enviar los datos: ' + e.message));
+    }
 
-  mostrarPantalla('pantalla-final');
-}
+    function mostrarPantalla(id) {
+      ['pantalla-login', 'pantalla-seleccion', 'pantalla-final'].forEach(p => {
+        document.getElementById(p).classList.add('hidden');
+      });
+      document.getElementById(id).classList.remove('hidden');
+    }
 
-function finalizar() {
-  const piezas = document.getElementById('piezas').value;
-  if (!piezas || parseFloat(piezas) <= 0) {
-    mostrarModal('Ingrese un número válido de piezas antes de finalizar.');
-    return;
-  }
-  registroActual.piezas = piezas;
-  registroActual.fecha_fin = new Date().toLocaleString();
-  registros.push({ ...registroActual });
-
-  fetch(window.API_URL + '/api/enviar', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(registroActual)
-  })
-    .then(r => r.text())
-    .then(() => {
-      mostrarModal('Registro guardado exitosamente.');
-      registroActual = {};
-      document.getElementById('piezas').value = '';
-      mostrarPantalla('pantalla-login');
-    })
-    .catch(e => mostrarModal('Error al enviar los datos: ' + e.message));
-}
-
-function mostrarPantalla(id) {
-  ['pantalla-login', 'pantalla-seleccion', 'pantalla-final'].forEach(p => {
-    document.getElementById(p).classList.add('hidden');
-  });
-  document.getElementById(id).classList.remove('hidden');
-}
-
-window.onload = inicializar;
-</script>
+    window.onload = inicializar;
+  </script>
 </body>
 </html>
-
-
