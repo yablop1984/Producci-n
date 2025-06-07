@@ -53,13 +53,6 @@
       font-size: 0.9rem;
       color: #555;
     }
-    .resumen {
-      background-color: #eef9f0;
-      border: 1px solid #c4e3cb;
-      padding: 1rem;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-    }
   </style>
   <script>
     window.API_URL = "https://bugel-backend.vercel.app";
@@ -97,9 +90,15 @@
 
     <div id="pantalla-final" class="hidden">
       <h2>Finalizar Producción</h2>
-      <div class="resumen" id="resumen-datos"></div>
       <input type="number" step="0.01" id="piezas" placeholder="Número de piezas" />
       <button onclick="finalizar()">Finalizar</button>
+    </div>
+  </div>
+
+  <div id="modal-mensaje" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 1.5rem; border-radius: 12px; max-width: 90%; text-align: center;">
+      <p id="modal-texto" style="margin-bottom: 1rem; font-size: 1rem;"></p>
+      <button onclick="cerrarModal()" style="padding: 0.5rem 1rem; background-color: #28a745; color: white; border: none; border-radius: 8px;">Aceptar</button>
     </div>
   </div>
 
@@ -110,6 +109,15 @@
 <script>
 let empleados = [], proyectos = [], rutasMaquinas = [], registros = [];
 let registroActual = {};
+
+function mostrarModal(mensaje) {
+  document.getElementById('modal-texto').innerText = mensaje;
+  document.getElementById('modal-mensaje').classList.remove('hidden');
+}
+
+function cerrarModal() {
+  document.getElementById('modal-mensaje').classList.add('hidden');
+}
 
 async function leerCSV(path) {
   const resp = await fetch(path);
@@ -153,13 +161,13 @@ async function inicializar() {
 function validarLogin() {
   const nombre = document.getElementById('nombre-empleado').value;
   const clave = document.getElementById('clave-empleado').value;
-  if (!nombre || !clave) return alert('Debe seleccionar nombre y clave.');
+  if (!nombre || !clave) return mostrarModal('Debe seleccionar nombre y clave.');
   const encontrado = empleados.find(e => e.nombre === nombre && e.clave === clave);
   if (encontrado) {
     registroActual.nombre = nombre;
     mostrarPantalla('pantalla-seleccion');
   } else {
-    alert('Credenciales incorrectas');
+    mostrarModal('Credenciales incorrectas');
   }
 }
 
@@ -205,28 +213,19 @@ function continuar() {
   const r = document.getElementById('ruta').value;
   const m = document.getElementById('maquina').value;
   const pr = document.getElementById('proceso').value;
-  if (!p || !r || !m || !pr) return alert('Todos los campos deben estar completos.');
+  if (!p || !r || !m || !pr) return mostrarModal('Todos los campos deben estar completos.');
   registroActual.proyecto = p;
   registroActual.ruta = r;
   registroActual.maquina = m;
   registroActual.proceso = pr;
   registroActual.fecha_inicio = new Date().toLocaleString();
-
-  document.getElementById("resumen-datos").innerHTML =
-    `<strong>Empleado:</strong> ${registroActual.nombre}<br>
-     <strong>Proyecto:</strong> ${p}<br>
-     <strong>Ruta:</strong> ${r}<br>
-     <strong>Máquina:</strong> ${m}<br>
-     <strong>Proceso:</strong> ${pr}`;
-
   mostrarPantalla('pantalla-final');
 }
 
 function finalizar() {
   const piezas = document.getElementById('piezas').value;
   if (!piezas || parseFloat(piezas) <= 0) {
-    alert('Ingrese un número válido de piezas antes de finalizar.');
-    return;
+    return mostrarModal('Ingrese un número válido de piezas antes de finalizar.');
   }
   registroActual.piezas = piezas;
   registroActual.fecha_fin = new Date().toLocaleString();
@@ -239,12 +238,12 @@ function finalizar() {
   })
     .then(r => r.text())
     .then(() => {
-      alert('Registro guardado exitosamente.');
+      mostrarModal('Registro guardado exitosamente.');
       registroActual = {};
       document.getElementById('piezas').value = '';
       mostrarPantalla('pantalla-login');
     })
-    .catch(e => alert('Error al enviar los datos: ' + e.message));
+    .catch(e => mostrarModal('Error al enviar los datos: ' + e.message));
 }
 
 function mostrarPantalla(id) {
