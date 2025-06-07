@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="es">
+<!DOCTYPE html>
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -53,16 +54,11 @@
       color: #555;
     }
     .resumen {
-      font-size: 0.95rem;
-      background: #e9f5ec;
+      background-color: #eef9f0;
+      border: 1px solid #c4e3cb;
       padding: 1rem;
-      border-radius: 10px;
+      border-radius: 8px;
       margin-bottom: 1rem;
-      color: #333;
-    }
-    .resumen strong {
-      display: block;
-      margin-top: 0.4rem;
     }
   </style>
   <script>
@@ -79,54 +75,188 @@
     <img src="logo.png" alt="Logo" style="max-width: 100px;" />
   </div>
   <div class="container">
-    <div id="pantalla-final">
-      <h2>Finalizar Producción</h2><div class="resumen" id="resumen-info">
-    <strong>Empleado:</strong> <span id="info-empleado"></span>
-    <strong>Ruta:</strong> <span id="info-ruta"></span>
-    <strong>Maquina:</strong> <span id="info-maquina"></span>
-    <strong>Proceso:</strong> <span id="info-proceso"></span>
+    <div id="pantalla-login">
+      <h2>Inicio de Sesión</h2>
+      <select id="nombre-empleado"></select>
+      <input type="password" id="clave-empleado" placeholder="Clave" />
+      <button onclick="validarLogin()">Ingresar</button>
+    </div>
+
+    <div id="pantalla-seleccion" class="hidden">
+      <h2>Producción</h2>
+      <label for="proyecto">Proyecto:</label>
+      <select id="proyecto"><option value="">Seleccione un proyecto</option></select>
+      <label for="ruta">Ruta:</label>
+      <select id="ruta" onchange="filtrarMaquinas()" disabled><option value="">Seleccione una ruta</option></select>
+      <label for="maquina">Máquina:</label>
+      <select id="maquina" onchange="filtrarProcesos()" disabled><option value="">Seleccione una máquina</option></select>
+      <label for="proceso">Proceso:</label>
+      <select id="proceso" disabled><option value="">Seleccione un proceso</option></select>
+      <button onclick="continuar()">Continuar</button>
+    </div>
+
+    <div id="pantalla-final" class="hidden">
+      <h2>Finalizar Producción</h2>
+      <div class="resumen" id="resumen-datos"></div>
+      <input type="number" step="0.01" id="piezas" placeholder="Número de piezas" />
+      <button onclick="finalizar()">Finalizar</button>
+    </div>
   </div>
 
-  <input type="number" step="0.01" id="piezas" placeholder="Número de piezas" />
-  <button onclick="finalizar()">Finalizar</button>
-</div>
-
-  </div>  <footer>
+  <footer>
     Elaborado por <strong>Yablop</strong> - Plataforma de Producción V.1
-  </footer>  <script>
-    let registroActual = JSON.parse(localStorage.getItem('registroActual')) || {};
+  </footer>
 
-    function mostrarResumen() {
-      document.getElementById('info-empleado').textContent = registroActual.nombre || '-';
-      document.getElementById('info-ruta').textContent = registroActual.ruta || '-';
-      document.getElementById('info-maquina').textContent = registroActual.maquina || '-';
-      document.getElementById('info-proceso').textContent = registroActual.proceso || '-';
-    }
+<script>
+let empleados = [], proyectos = [], rutasMaquinas = [], registros = [];
+let registroActual = {};
 
-    function finalizar() {
-      const piezas = document.getElementById('piezas').value;
-      if (!piezas || parseFloat(piezas) <= 0) {
-        alert('Ingrese un número válido de piezas antes de finalizar.');
-        return;
-      }
+async function leerCSV(path) {
+  const resp = await fetch(path);
+  const texto = await resp.text();
+  const [cab, ...filas] = texto.trim().split('\n').map(l => l.split(','));
+  return filas.map(f => Object.fromEntries(f.map((v, i) => [cab[i], v])));
+}
 
-      registroActual.piezas = piezas;
-      registroActual.fecha_fin = new Date().toLocaleString();
+async function inicializar() {
+  empleados = await leerCSV('empleados.csv');
+  proyectos = await leerCSV('proyectos.csv');
+  rutasMaquinas = await leerCSV('rutas_maquinas.csv');
 
-      fetch(window.API_URL + '/api/enviar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(registroActual)
-      })
-        .then(r => r.text())
-        .then(() => {
-          alert('Registro guardado exitosamente.');
-          localStorage.removeItem('registroActual');
-          document.getElementById('piezas').value = '';
-        })
-        .catch(e => alert('Error al enviar los datos: ' + e.message));
-    }
+  const selEmpleado = document.getElementById('nombre-empleado');
+  empleados.forEach(e => {
+    const op = document.createElement('option');
+    op.value = e.nombre;
+    op.textContent = e.nombre;
+    selEmpleado.appendChild(op);
+  });
 
-    window.onload = mostrarResumen;
-  </script></body>
+  const selProyecto = document.getElementById('proyecto');
+  proyectos.forEach(p => {
+    const op = document.createElement('option');
+    op.value = p.proyecto;
+    op.textContent = p.proyecto;
+    selProyecto.appendChild(op);
+  });
+
+  const rutasUnicas = [...new Set(rutasMaquinas.map(r => r.ruta))];
+  const selRuta = document.getElementById('ruta');
+  rutasUnicas.forEach(r => {
+    const op = document.createElement('option');
+    op.value = r;
+    op.textContent = r;
+    selRuta.appendChild(op);
+  });
+  selRuta.disabled = false;
+}
+
+function validarLogin() {
+  const nombre = document.getElementById('nombre-empleado').value;
+  const clave = document.getElementById('clave-empleado').value;
+  if (!nombre || !clave) return alert('Debe seleccionar nombre y clave.');
+  const encontrado = empleados.find(e => e.nombre === nombre && e.clave === clave);
+  if (encontrado) {
+    registroActual.nombre = nombre;
+    mostrarPantalla('pantalla-seleccion');
+  } else {
+    alert('Credenciales incorrectas');
+  }
+}
+
+function filtrarMaquinas() {
+  const rutaSel = document.getElementById('ruta').value;
+  const selMaquina = document.getElementById('maquina');
+  selMaquina.innerHTML = '<option value="">Seleccione una máquina</option>';
+  document.getElementById('proceso').innerHTML = '<option value="">Seleccione un proceso</option>';
+  selMaquina.disabled = true;
+  document.getElementById('proceso').disabled = true;
+
+  if (!rutaSel) return;
+  const maquinas = [...new Set(rutasMaquinas.filter(r => r.ruta === rutaSel).map(r => r.maquina))];
+  maquinas.forEach(m => {
+    const op = document.createElement('option');
+    op.value = m;
+    op.textContent = m;
+    selMaquina.appendChild(op);
+  });
+  selMaquina.disabled = false;
+}
+
+function filtrarProcesos() {
+  const rutaSel = document.getElementById('ruta').value;
+  const maqSel = document.getElementById('maquina').value;
+  const selProceso = document.getElementById('proceso');
+  selProceso.innerHTML = '<option value="">Seleccione un proceso</option>';
+  selProceso.disabled = true;
+
+  if (!maqSel) return;
+  const procesos = rutasMaquinas.filter(r => r.ruta === rutaSel && r.maquina === maqSel).map(r => r.proceso);
+  procesos.forEach(p => {
+    const op = document.createElement('option');
+    op.value = p;
+    op.textContent = p;
+    selProceso.appendChild(op);
+  });
+  selProceso.disabled = false;
+}
+
+function continuar() {
+  const p = document.getElementById('proyecto').value;
+  const r = document.getElementById('ruta').value;
+  const m = document.getElementById('maquina').value;
+  const pr = document.getElementById('proceso').value;
+  if (!p || !r || !m || !pr) return alert('Todos los campos deben estar completos.');
+  registroActual.proyecto = p;
+  registroActual.ruta = r;
+  registroActual.maquina = m;
+  registroActual.proceso = pr;
+  registroActual.fecha_inicio = new Date().toLocaleString();
+
+  document.getElementById("resumen-datos").innerHTML =
+    `<strong>Empleado:</strong> ${registroActual.nombre}<br>
+     <strong>Proyecto:</strong> ${p}<br>
+     <strong>Ruta:</strong> ${r}<br>
+     <strong>Máquina:</strong> ${m}<br>
+     <strong>Proceso:</strong> ${pr}`;
+
+  mostrarPantalla('pantalla-final');
+}
+
+function finalizar() {
+  const piezas = document.getElementById('piezas').value;
+  if (!piezas || parseFloat(piezas) <= 0) {
+    alert('Ingrese un número válido de piezas antes de finalizar.');
+    return;
+  }
+  registroActual.piezas = piezas;
+  registroActual.fecha_fin = new Date().toLocaleString();
+  registros.push({ ...registroActual });
+
+  fetch(window.API_URL + '/api/enviar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(registroActual)
+  })
+    .then(r => r.text())
+    .then(() => {
+      alert('Registro guardado exitosamente.');
+      registroActual = {};
+      document.getElementById('piezas').value = '';
+      mostrarPantalla('pantalla-login');
+    })
+    .catch(e => alert('Error al enviar los datos: ' + e.message));
+}
+
+function mostrarPantalla(id) {
+  ['pantalla-login', 'pantalla-seleccion', 'pantalla-final'].forEach(p => {
+    document.getElementById(p).classList.add('hidden');
+  });
+  document.getElementById(id).classList.remove('hidden');
+}
+
+window.onload = inicializar;
+</script>
+</body>
 </html>
+
+
