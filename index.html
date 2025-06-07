@@ -53,26 +53,22 @@
       font-size: 0.9rem;
       color: #555;
     }
-    #modal {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 999;
-    }
-    #modalContent {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 12px;
-      text-align: center;
-    }
-    #modalContent button {
-      margin-top: 1rem;
-      background-color: #28a745;
+    .resumen {
+      background-color: #eef9f0;
+      border: 1px solid #c4e3cb;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
     }
   </style>
+  <script>
+    window.API_URL = "https://bugel-backend.vercel.app";
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('service-worker.js');
+      });
+    }
+  </script>
 </head>
 <body>
   <div style="text-align: center; margin-bottom: 1rem;">
@@ -101,16 +97,9 @@
 
     <div id="pantalla-final" class="hidden">
       <h2>Finalizar Producción</h2>
-      <div id="resumen"></div>
+      <div class="resumen" id="resumen-datos"></div>
       <input type="number" step="0.01" id="piezas" placeholder="Número de piezas" />
       <button onclick="finalizar()">Finalizar</button>
-    </div>
-  </div>
-
-  <div id="modal" class="hidden">
-    <div id="modalContent">
-      <div id="modalMensaje">Mensaje del sistema</div>
-      <button onclick="cerrarModal()">Aceptar</button>
     </div>
   </div>
 
@@ -118,143 +107,155 @@
     Elaborado por <strong>Yablop</strong> - Plataforma de Producción V.1
   </footer>
 
-  <script>
-    window.API_URL = "https://bugel-backend.vercel.app";
-    let empleados = [], proyectos = [], rutasMaquinas = [], registros = [];
-    let registroActual = {};
+<script>
+let empleados = [], proyectos = [], rutasMaquinas = [], registros = [];
+let registroActual = {};
 
-    function mostrarModal(mensaje) {
-      document.getElementById('modalMensaje').innerText = mensaje;
-      document.getElementById('modal').classList.remove('hidden');
-    }
+async function leerCSV(path) {
+  const resp = await fetch(path);
+  const texto = await resp.text();
+  const [cab, ...filas] = texto.trim().split('\n').map(l => l.split(','));
+  return filas.map(f => Object.fromEntries(f.map((v, i) => [cab[i], v])));
+}
 
-    function cerrarModal() {
-      document.getElementById('modal').classList.add('hidden');
-    }
+async function inicializar() {
+  empleados = await leerCSV('empleados.csv');
+  proyectos = await leerCSV('proyectos.csv');
+  rutasMaquinas = await leerCSV('rutas_maquinas.csv');
 
-    async function leerCSV(path) {
-      const resp = await fetch(path);
-      const texto = await resp.text();
-      const [cab, ...filas] = texto.trim().split('\n').map(l => l.split(','));
-      return filas.map(f => Object.fromEntries(f.map((v, i) => [cab[i], v])));
-    }
+  const selEmpleado = document.getElementById('nombre-empleado');
+  empleados.forEach(e => {
+    const op = document.createElement('option');
+    op.value = e.nombre;
+    op.textContent = e.nombre;
+    selEmpleado.appendChild(op);
+  });
 
-    async function inicializar() {
-      empleados = await leerCSV('empleados.csv');
-      proyectos = await leerCSV('proyectos.csv');
-      rutasMaquinas = await leerCSV('rutas_maquinas.csv');
+  const selProyecto = document.getElementById('proyecto');
+  proyectos.forEach(p => {
+    const op = document.createElement('option');
+    op.value = p.proyecto;
+    op.textContent = p.proyecto;
+    selProyecto.appendChild(op);
+  });
 
-      empleados.forEach(e => {
-        const op = document.createElement('option');
-        op.value = e.nombre;
-        op.textContent = e.nombre;
-        document.getElementById('nombre-empleado').appendChild(op);
-      });
+  const rutasUnicas = [...new Set(rutasMaquinas.map(r => r.ruta))];
+  const selRuta = document.getElementById('ruta');
+  rutasUnicas.forEach(r => {
+    const op = document.createElement('option');
+    op.value = r;
+    op.textContent = r;
+    selRuta.appendChild(op);
+  });
+  selRuta.disabled = false;
+}
 
-      proyectos.forEach(p => {
-        const op = document.createElement('option');
-        op.value = p.proyecto;
-        op.textContent = p.proyecto;
-        document.getElementById('proyecto').appendChild(op);
-      });
+function validarLogin() {
+  const nombre = document.getElementById('nombre-empleado').value;
+  const clave = document.getElementById('clave-empleado').value;
+  if (!nombre || !clave) return alert('Debe seleccionar nombre y clave.');
+  const encontrado = empleados.find(e => e.nombre === nombre && e.clave === clave);
+  if (encontrado) {
+    registroActual.nombre = nombre;
+    mostrarPantalla('pantalla-seleccion');
+  } else {
+    alert('Credenciales incorrectas');
+  }
+}
 
-      const rutasUnicas = [...new Set(rutasMaquinas.map(r => r.ruta))];
-      rutasUnicas.forEach(r => {
-        const op = document.createElement('option');
-        op.value = r;
-        op.textContent = r;
-        document.getElementById('ruta').appendChild(op);
-      });
-      document.getElementById('ruta').disabled = false;
-    }
+function filtrarMaquinas() {
+  const rutaSel = document.getElementById('ruta').value;
+  const selMaquina = document.getElementById('maquina');
+  selMaquina.innerHTML = '<option value="">Seleccione una máquina</option>';
+  document.getElementById('proceso').innerHTML = '<option value="">Seleccione un proceso</option>';
+  selMaquina.disabled = true;
+  document.getElementById('proceso').disabled = true;
 
-    function validarLogin() {
-      const nombre = document.getElementById('nombre-empleado').value;
-      const clave = document.getElementById('clave-empleado').value;
-      const encontrado = empleados.find(e => e.nombre === nombre && e.clave === clave);
-      if (!nombre || !clave) return mostrarModal('Debe seleccionar nombre y clave.');
-      if (!encontrado) return mostrarModal('Credenciales incorrectas.');
-      registroActual.nombre = nombre;
-      mostrarPantalla('pantalla-seleccion');
-    }
+  if (!rutaSel) return;
+  const maquinas = [...new Set(rutasMaquinas.filter(r => r.ruta === rutaSel).map(r => r.maquina))];
+  maquinas.forEach(m => {
+    const op = document.createElement('option');
+    op.value = m;
+    op.textContent = m;
+    selMaquina.appendChild(op);
+  });
+  selMaquina.disabled = false;
+}
 
-    function filtrarMaquinas() {
-      const rutaSel = document.getElementById('ruta').value;
-      const selMaquina = document.getElementById('maquina');
-      selMaquina.innerHTML = '<option value="">Seleccione una máquina</option>';
-      document.getElementById('proceso').innerHTML = '<option value="">Seleccione un proceso</option>';
-      selMaquina.disabled = true;
-      document.getElementById('proceso').disabled = true;
+function filtrarProcesos() {
+  const rutaSel = document.getElementById('ruta').value;
+  const maqSel = document.getElementById('maquina').value;
+  const selProceso = document.getElementById('proceso');
+  selProceso.innerHTML = '<option value="">Seleccione un proceso</option>';
+  selProceso.disabled = true;
 
-      if (!rutaSel) return;
-      const maquinas = [...new Set(rutasMaquinas.filter(r => r.ruta === rutaSel).map(r => r.maquina))];
-      maquinas.forEach(m => {
-        const op = document.createElement('option');
-        op.value = m;
-        op.textContent = m;
-        selMaquina.appendChild(op);
-      });
-      selMaquina.disabled = false;
-    }
+  if (!maqSel) return;
+  const procesos = rutasMaquinas.filter(r => r.ruta === rutaSel && r.maquina === maqSel).map(r => r.proceso);
+  procesos.forEach(p => {
+    const op = document.createElement('option');
+    op.value = p;
+    op.textContent = p;
+    selProceso.appendChild(op);
+  });
+  selProceso.disabled = false;
+}
 
-    function filtrarProcesos() {
-      const rutaSel = document.getElementById('ruta').value;
-      const maqSel = document.getElementById('maquina').value;
-      const selProceso = document.getElementById('proceso');
-      selProceso.innerHTML = '<option value="">Seleccione un proceso</option>';
-      selProceso.disabled = true;
+function continuar() {
+  const p = document.getElementById('proyecto').value;
+  const r = document.getElementById('ruta').value;
+  const m = document.getElementById('maquina').value;
+  const pr = document.getElementById('proceso').value;
+  if (!p || !r || !m || !pr) return alert('Todos los campos deben estar completos.');
+  registroActual.proyecto = p;
+  registroActual.ruta = r;
+  registroActual.maquina = m;
+  registroActual.proceso = pr;
+  registroActual.fecha_inicio = new Date().toLocaleString();
 
-      if (!maqSel) return;
-      const procesos = rutasMaquinas.filter(r => r.ruta === rutaSel && r.maquina === maqSel).map(r => r.proceso);
-      procesos.forEach(p => {
-        const op = document.createElement('option');
-        op.value = p;
-        op.textContent = p;
-        selProceso.appendChild(op);
-      });
-      selProceso.disabled = false;
-    }
+  document.getElementById("resumen-datos").innerHTML =
+    `<strong>Empleado:</strong> ${registroActual.nombre}<br>
+     <strong>Proyecto:</strong> ${p}<br>
+     <strong>Ruta:</strong> ${r}<br>
+     <strong>Máquina:</strong> ${m}<br>
+     <strong>Proceso:</strong> ${pr}`;
 
-    function continuar() {
-      const p = document.getElementById('proyecto').value;
-      const r = document.getElementById('ruta').value;
-      const m = document.getElementById('maquina').value;
-      const pr = document.getElementById('proceso').value;
-      if (!p || !r || !m || !pr) return mostrarModal('Todos los campos deben estar completos.');
-      registroActual = { ...registroActual, proyecto: p, ruta: r, maquina: m, proceso: pr, fecha_inicio: new Date().toLocaleString() };
-      document.getElementById('resumen').innerHTML = `<strong>Empleado:</strong> ${registroActual.nombre}<br><strong>Ruta:</strong> ${r}<br><strong>Máquina:</strong> ${m}<br><strong>Proceso:</strong> ${pr}`;
-      mostrarPantalla('pantalla-final');
-    }
+  mostrarPantalla('pantalla-final');
+}
 
-    function finalizar() {
-      const piezas = document.getElementById('piezas').value;
-      if (!piezas || parseFloat(piezas) <= 0) return mostrarModal('Ingrese un número válido de piezas.');
-      registroActual.piezas = piezas;
-      registroActual.fecha_fin = new Date().toLocaleString();
-      registros.push({ ...registroActual });
-      fetch(window.API_URL + '/api/enviar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(registroActual)
-      })
-        .then(r => r.text())
-        .then(() => {
-          mostrarModal('Registro guardado exitosamente.');
-          registroActual = {};
-          document.getElementById('piezas').value = '';
-          mostrarPantalla('pantalla-login');
-        })
-        .catch(e => mostrarModal('Error al enviar los datos: ' + e.message));
-    }
+function finalizar() {
+  const piezas = document.getElementById('piezas').value;
+  if (!piezas || parseFloat(piezas) <= 0) {
+    alert('Ingrese un número válido de piezas antes de finalizar.');
+    return;
+  }
+  registroActual.piezas = piezas;
+  registroActual.fecha_fin = new Date().toLocaleString();
+  registros.push({ ...registroActual });
 
-    function mostrarPantalla(id) {
-      ['pantalla-login', 'pantalla-seleccion', 'pantalla-final'].forEach(p => {
-        document.getElementById(p).classList.add('hidden');
-      });
-      document.getElementById(id).classList.remove('hidden');
-    }
+  fetch(window.API_URL + '/api/enviar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(registroActual)
+  })
+    .then(r => r.text())
+    .then(() => {
+      alert('Registro guardado exitosamente.');
+      registroActual = {};
+      document.getElementById('piezas').value = '';
+      mostrarPantalla('pantalla-login');
+    })
+    .catch(e => alert('Error al enviar los datos: ' + e.message));
+}
 
-    window.onload = inicializar;
-  </script>
+function mostrarPantalla(id) {
+  ['pantalla-login', 'pantalla-seleccion', 'pantalla-final'].forEach(p => {
+    document.getElementById(p).classList.add('hidden');
+  });
+  document.getElementById(id).classList.remove('hidden');
+}
+
+window.onload = inicializar;
+</script>
 </body>
 </html>
+
