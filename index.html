@@ -1,287 +1,330 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Plataforma de Producción</title>
-    <link rel="manifest" href="manifest.json" />
-    <link rel="icon" href="logo.png" type="image/png" />
-    <meta name="theme-color" content="#28a745" />
-    <style>
-        body {
-            font-family: sans-serif;
-            background-color: #f2f5f9;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            position: relative;
-        }
-        .container {
-            max-width: 500px;
-            margin: 40px auto;
-            background-color: #ffffff;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        .logo {
-            display: block;
-            margin: 0 auto 1rem;
-            width: 120px;
-        }
-        label {
-            font-weight: bold;
-            display: block;
-            margin-bottom: 0.2rem;
-        }
-        select, input[type="password"], input[type="number"] {
-            width: 100%;
-            padding: 0.6rem;
-            margin-bottom: 1rem;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 1rem;
-        }
-        button {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 0.8rem;
-            border-radius: 8px;
-            width: 100%;
-            font-size: 1.1rem;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #218838;
-        }
-        .footer {
-            position: fixed;
-            bottom: 5px;
-            width: 100%;
-            text-align: center;
-            font-size: 0.85rem;
-            color: #555;
-        }
-        .summary {
-            margin-bottom: 1rem;
-            padding: 1rem;
-            background-color: #eef6f0;
-            border-radius: 8px;
-            border: 1px solid #cce5d5;
-        }
-        .summary p {
-            margin: 0.3rem 0;
-            font-size: 1rem;
-        }
-        .hidden {
-            display: none;
-        }
-        #custom-modal.hidden { display: none; }
-        #custom-modal {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        .modal-backdrop {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.4);
-        }
-        .modal-content {
-            position: relative;
-            background: #fff;
-            padding: 1.5rem;
-            border-radius: 8px;
-            max-width: 90%;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            text-align: center;
-        }
-        .modal-content button {
-            margin-top: 1rem;
-            padding: 0.5rem 1.5rem;
-            border: none;
-            border-radius: 6px;
-            background: #28a745;
-            color: #fff;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .modal-content button:hover {
-            background: #218838;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plataforma de Producción</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="logo.png" type="image/png" />
+  <meta name="theme-color" content="#28a745" />
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f2f5f9;
+      margin: 0;
+      padding: 1rem;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background-color: #ffffff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 0.2rem;
+      color: #333333;
+    }
+    select, input, button {
+      width: 100%;
+      margin-bottom: 1rem;
+      padding: 0.6rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    .hidden { display: none; }
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      color: #555;
+    }
+    .resumen {
+      background-color: #eef9f0;
+      border: 1px solid #c4e3cb;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    /* Estilos del modal personalizado */
+    #custom-modal.hidden { display: none; }
+    #custom-modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-backdrop {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+      position: relative;
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 8px;
+      max-width: 90%;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    .modal-content button {
+      margin-top: 1rem;
+      padding: 0.5rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      background: #28a745;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .modal-content button:hover {
+      background: #218838;
+    }
+  </style>
+  <script>
+    window.API_URL = "https://bugel-backend.vercel.app";
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('service-worker.js');
+      });
+    }
+  </script>
 </head>
 <body>
-    <div class="container">
-        <!-- Pantalla 1: Login -->
-        <div id="pantalla-login">
-            <img src="logo.png" alt="Logo" class="logo" />
-            <h2>Inicio de Sesión</h2>
-
-            <label for="usuario">Empleado:</label>
-            <select id="usuario">
-                <option value="">Seleccione un empleado</option>
-            </select>
-
-            <label for="clave">Clave:</label>
-            <input type="password" id="clave" placeholder="Clave" />
-
-            <button onclick="iniciarSesion()">Ingresar</button>
-        </div>
-
-        <!-- Pantalla 2: Selección -->
-        <div id="pantalla-seleccion" class="hidden">
-            <img src="logo.png" alt="Logo" class="logo" />
-            <h2>Selección de Proceso</h2>
-
-            <label for="proyecto">Proyecto:</label>
-            <select id="proyecto">
-                <option value="">Seleccione un proyecto</option>
-            </select>
-
-            <label for="producto">Producto:</label>
-            <select id="producto" disabled>
-                <option value="">Seleccione un producto</option>
-            </select>
-
-            <label for="parte">Parte:</label>
-            <select id="parte" disabled>
-                <option value="">Seleccione una parte</option>
-            </select>
-
-            <label for="ruta">Ruta:</label>
-            <select id="ruta" disabled>
-                <option value="">Seleccione una ruta</option>
-            </select>
-
-            <label for="maquina">Máquina:</label>
-            <select id="maquina" disabled>
-                <option value="">Seleccione una máquina</option>
-            </select>
-
-            <label for="proceso">Proceso:</label>
-            <select id="proceso" disabled>
-                <option value="">Seleccione un proceso</option>
-            </select>
-
-            <button id="btnContinuar" onclick="mostrarPantallaFinal()" disabled>Continuar</button>
-        </div>
-
-        <!-- Pantalla 3: Finalizar -->
-        <div id="pantalla-finalizar" class="hidden">
-            <img src="logo.png" alt="Logo" class="logo" />
-            <h2>Finalizar Proceso</h2>
-
-            <div class="summary" id="resumen"></div>
-
-            <label for="piezas">Número de piezas:</label>
-            <input type="number" id="piezas" min="0" step="0.01" placeholder="Ingrese número de piezas" oninput="validarPiezas()" />
-
-            <button id="btnFinalizar" onclick="finalizarProceso()" disabled>Finalizar</button>
-        </div>
+  <div style="text-align: center; margin-bottom: 1rem;">
+    <img src="logo.png" alt="Logo" style="max-width: 100px;" />
+  </div>
+  <div class="container">
+    <div id="pantalla-login">
+      <h2>Inicio de Sesión</h2>
+      <select id="nombre-empleado"></select>
+      <input type="password" id="clave-empleado" placeholder="Clave" />
+      <button onclick="validarLogin()">Ingresar</button>
     </div>
 
-    <!-- Modal personalizado -->
-    <div id="custom-modal" class="hidden">
-        <div class="modal-backdrop"></div>
-        <div class="modal-content">
-            <p id="modal-message"></p>
-            <button id="modal-ok">OK</button>
-        </div>
+    <div id="pantalla-seleccion" class="hidden">
+      <h2>Producción</h2>
+      <label for="proyecto">Proyecto:</label>
+      <select id="proyecto"><option value="">Seleccione un proyecto</option></select>
+      <label for="ruta">Ruta:</label>
+      <select id="ruta" onchange="filtrarMaquinas()" disabled><option value="">Seleccione una ruta</option></select>
+      <label for="maquina">Máquina:</label>
+      <select id="maquina" onchange="filtrarProcesos()" disabled><option value="">Seleccione una máquina</option></select>
+      <label for="proceso">Proceso:</label>
+      <select id="proceso" disabled><option value="">Seleccione un proceso</option></select>
+      <button onclick="continuar()">Continuar</button>
     </div>
 
-    <div class="footer">
-        Elaborado por <b>Yablop</b> - Plataforma de Producción V.1
+    <div id="pantalla-final" class="hidden">
+      <h2>Finalizar Producción</h2>
+      <div class="resumen" id="resumen-datos"></div>
+      <input type="number" step="0.01" id="piezas" placeholder="Número de piezas" />
+      <button id="btn-finalizar" onclick="finalizar()">Finalizar</button>
     </div>
+  </div>
+
+  <!-- Modal personalizado -->
+  <div id="custom-modal" class="hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <p id="modal-message"></p>
+      <button id="modal-ok">OK</button>
+    </div>
+  </div>
+
+  <footer>
+    Elaborado por <strong>Yablop</strong> - Plataforma de Producción V.1
+  </footer>
 
 <script>
-let empleados = [], proyectos = [], rutasMaquinas = [], productosData = [];
+let empleados = [], proyectos = [], rutasMaquinas = [], registros = [];
+let registroActual = {};
 
 async function leerCSV(path) {
-    const resp = await fetch(path);
-    const texto = await resp.text();
-    const separador = texto.includes(';') ? ';' : ',';
-    const [cab, ...filas] = texto.trim().split('\n').map(l => l.split(separador));
-    return filas.map(f => Object.fromEntries(f.map((v, i) => [cab[i], v])));
+  const resp = await fetch(path);
+  const texto = await resp.text();
+  const [cab, ...filas] = texto.trim().split('\n').map(l => l.split(','));
+  return filas.map(f => Object.fromEntries(f.map((v, i) => [cab[i], v])));
 }
 
 async function inicializar() {
-    empleados = await leerCSV('empleados.csv');
-    proyectos = await leerCSV('proyectos.csv');
-    rutasMaquinas = await leerCSV('rutas_maquinas.csv');
-    productosData = await leerCSV('productos.csv');
+  empleados = await leerCSV('empleados.csv');
+  proyectos = await leerCSV('proyectos.csv');
+  rutasMaquinas = await leerCSV('rutas_maquinas.csv');
 
-    const selEmpleado = document.getElementById('usuario');
-    empleados.forEach(e => {
-        const op = document.createElement('option');
-        op.value = e.nombre;
-        op.textContent = e.nombre;
-        selEmpleado.appendChild(op);
+  const selEmpleado = document.getElementById('nombre-empleado');
+  empleados.forEach(e => {
+    const op = document.createElement('option');
+    op.value = e.nombre;
+    op.textContent = e.nombre;
+    selEmpleado.appendChild(op);
+  });
+
+  const selProyecto = document.getElementById('proyecto');
+  proyectos.forEach(p => {
+    const op = document.createElement('option');
+    op.value = p.proyecto;
+    op.textContent = p.proyecto;
+    selProyecto.appendChild(op);
+  });
+
+  const rutasUnicas = [...new Set(rutasMaquinas.map(r => r.ruta))];
+  const selRuta = document.getElementById('ruta');
+  rutasUnicas.forEach(r => {
+    const op = document.createElement('option');
+    op.value = r;
+    op.textContent = r;
+    selRuta.appendChild(op);
+  });
+  selRuta.disabled = false;
+}
+
+function showAlert(msg) {
+  const modal = document.getElementById('custom-modal');
+  document.getElementById('modal-message').textContent = msg;
+  modal.classList.remove('hidden');
+  document.getElementById('modal-ok').onclick = () => modal.classList.add('hidden');
+}
+
+function validarLogin() {
+  const nombre = document.getElementById('nombre-empleado').value;
+  const clave = document.getElementById('clave-empleado').value;
+  if (!nombre || !clave) return showAlert('Debe seleccionar nombre y clave.');
+  const encontrado = empleados.find(e => e.nombre === nombre && e.clave === clave);
+  if (encontrado) {
+    registroActual.nombre = nombre;
+    mostrarPantalla('pantalla-seleccion');
+  } else {
+    showAlert('Credenciales incorrectas');
+  }
+}
+
+function filtrarMaquinas() {
+  const rutaSel = document.getElementById('ruta').value;
+  const selMaquina = document.getElementById('maquina');
+  selMaquina.innerHTML = '<option value="">Seleccione una máquina</option>';
+  document.getElementById('proceso').innerHTML = '<option value="">Seleccione un proceso</option>';
+  selMaquina.disabled = true;
+  document.getElementById('proceso').disabled = true;
+
+  if (!rutaSel) return;
+  const maquinas = [...new Set(rutasMaquinas.filter(r => r.ruta === rutaSel).map(r => r.maquina))];
+  maquinas.forEach(m => {
+    const op = document.createElement('option');
+    op.value = m;
+    op.textContent = m;
+    selMaquina.appendChild(op);
+  });
+  selMaquina.disabled = false;
+}
+
+function filtrarProcesos() {
+  const rutaSel = document.getElementById('ruta').value;
+  const maqSel = document.getElementById('maquina').value;
+  const selProceso = document.getElementById('proceso');
+  selProceso.innerHTML = '<option value="">Seleccione un proceso</option>';
+  selProceso.disabled = true;
+
+  if (!maqSel) return;
+  const procesos = rutasMaquinas.filter(r => r.ruta === rutaSel && r.maquina === maqSel).map(r => r.proceso);
+  procesos.forEach(p => {
+    const op = document.createElement('option');
+    op.value = p;
+    op.textContent = p;
+    selProceso.appendChild(op);
+  });
+  selProceso.disabled = false;
+}
+
+function continuar() {
+  const p = document.getElementById('proyecto').value;
+  const r = document.getElementById('ruta').value;
+  const m = document.getElementById('maquina').value;
+  const pr = document.getElementById('proceso').value;
+  if (!p || !r || !m || !pr) return showAlert('Todos los campos deben estar completos.');
+  registroActual.proyecto = p;
+  registroActual.ruta = r;
+  registroActual.maquina = m;
+  registroActual.proceso = pr;
+  registroActual.fecha_inicio = new Date().toLocaleString();
+
+  document.getElementById("resumen-datos").innerHTML =
+    <strong>Empleado:</strong> ${registroActual.nombre}<br>
+     <strong>Proyecto:</strong> ${p}<br>
+     <strong>Ruta:</strong> ${r}<br>
+     <strong>Máquina:</strong> ${m}<br>
+     <strong>Proceso:</strong> ${pr};
+
+  mostrarPantalla('pantalla-final');
+}
+
+function finalizar() {
+  const btn = document.getElementById('btn-finalizar');
+  const piezas = document.getElementById('piezas').value;
+  if (!piezas || parseFloat(piezas) <= 0) {
+    return showAlert('Ingrese un número válido de piezas antes de finalizar.');
+  }
+  btn.disabled = true;
+
+  registroActual.piezas = piezas;
+  registroActual.fecha_fin = new Date().toLocaleString();
+  registros.push({ ...registroActual });
+
+  fetch(window.API_URL + '/api/enviar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(registroActual)
+  })
+    .then(r => r.text())
+    .then(() => {
+      showAlert('Registro guardado exitosamente.');
+      registroActual = {};
+      resetearCampos();
+      btn.disabled = false;
+      mostrarPantalla('pantalla-login');
+    })
+    .catch(e => {
+      btn.disabled = false;
+      showAlert('Error al enviar los datos: ' + e.message);
     });
+}
 
-    const selProyecto = document.getElementById('proyecto');
-    proyectos.forEach(p => {
-        const op = document.createElement('option');
-        op.value = p.proyecto;
-        op.textContent = p.proyecto;
-        selProyecto.appendChild(op);
-    });
+function mostrarPantalla(id) {
+  ['pantalla-login', 'pantalla-seleccion', 'pantalla-final'].forEach(p => {
+    document.getElementById(p).classList.add('hidden');
+  });
+  document.getElementById(id).classList.remove('hidden');
+}
 
-    const rutasUnicas = [...new Set(rutasMaquinas.map(r => r.ruta))];
-    const selRuta = document.getElementById('ruta');
-    rutasUnicas.forEach(r => {
-        const op = document.createElement('option');
-        op.value = r;
-        op.textContent = r;
-        selRuta.appendChild(op);
-    });
-
-    cargarProductos();
+function resetearCampos() {
+  document.getElementById('proyecto').value = '';
+  document.getElementById('ruta').value = '';
+  document.getElementById('maquina').innerHTML = '<option value="">Seleccione una máquina</option>';
+  document.getElementById('maquina').disabled = true;
+  document.getElementById('proceso').innerHTML = '<option value="">Seleccione un proceso</option>';
+  document.getElementById('proceso').disabled = true;
+  document.getElementById('resumen-datos').innerHTML = '';
+  document.getElementById('piezas').value = '';
 }
 
 window.onload = inicializar;
-
-function showAlert(msg) {
-    const modal = document.getElementById('custom-modal');
-    document.getElementById('modal-message').textContent = msg;
-    modal.classList.remove('hidden');
-    document.getElementById('modal-ok').onclick = () => modal.classList.add('hidden');
-}
-
-function iniciarSesion() {
-    const usuario = document.getElementById('usuario').value;
-    const clave = document.getElementById('clave').value;
-
-    if (usuario === '' || clave === '') {
-        showAlert('Por favor seleccione empleado e ingrese clave.');
-        return;
-    }
-
-    localStorage.setItem('empleado', usuario);
-
-    document.getElementById('pantalla-login').classList.add('hidden');
-    document.getElementById('pantalla-seleccion').classList.remove('hidden');
-}
-
-function finalizarProceso() {
-    const piezas = document.getElementById('piezas').value;
-
-    if (piezas.trim() === '' || parseFloat(piezas) <= 0) {
-        showAlert('Por favor ingrese un número de piezas válido.');
-        return;
-    }
-
-    showAlert(`Registro guardado con ${piezas} piezas.`);
-
-    document.getElementById('modal-ok').onclick = () => {
-        document.getElementById('custom-modal').classList.add('hidden');
-        window.location.reload();
-    };
-}
 </script>
 </body>
 </html>
