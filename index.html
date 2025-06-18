@@ -7,7 +7,6 @@
     <link rel="manifest" href="manifest.json" />
     <link rel="icon" href="logo.png" type="image/png" />
     <meta name="theme-color" content="#28a745" />
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <style>
         body {
             font-family: sans-serif;
@@ -91,7 +90,6 @@
             <select id="usuario">
                 <option value="">Seleccione un empleado</option>
                 <option value="ELKIN PARRA">ELKIN PARRA</option>
-                <!-- Puedes agregar más empleados desde CSV -->
             </select>
 
             <label for="clave">Clave:</label>
@@ -160,145 +158,149 @@
         Elaborado por <b>Yablop</b> - Plataforma de Producción V.1
     </div>
 
-    <script>
-        let productosData = [];
+<script>
+let productosData = [];
 
-        Papa.parse('productos.csv', {
-            download: true,
-            header: true,
-            complete: function(results) {
-                productosData = results.data;
-                cargarProductos();
-            }
+async function leerCSV(path) {
+  const resp = await fetch(path);
+  const texto = await resp.text();
+  const [cab, ...filas] = texto.trim().split('\n').map(l => l.split(','));
+  return filas.map(f => Object.fromEntries(f.map((v, i) => [cab[i], v])));
+}
+
+async function inicializar() {
+  productosData = await leerCSV('productos.csv');
+  cargarProductos();
+}
+
+window.onload = inicializar;
+
+function iniciarSesion() {
+    const usuario = document.getElementById('usuario').value;
+    const clave = document.getElementById('clave').value;
+
+    if (usuario === '' || clave === '') {
+        alert('Por favor seleccione empleado e ingrese clave.');
+        return;
+    }
+
+    localStorage.setItem('empleado', usuario);
+
+    document.getElementById('pantalla-login').classList.add('hidden');
+    document.getElementById('pantalla-seleccion').classList.remove('hidden');
+}
+
+function cargarProductos() {
+    const productoSelect = document.getElementById('producto');
+    productoSelect.disabled = false;
+
+    const productosUnicos = [...new Set(productosData.map(item => item.producto))];
+    productosUnicos.forEach(producto => {
+        const option = document.createElement('option');
+        option.value = producto;
+        option.textContent = producto;
+        productoSelect.appendChild(option);
+    });
+}
+
+document.getElementById('producto').addEventListener('change', function() {
+    const productoSeleccionado = this.value;
+    const parteSelect = document.getElementById('parte');
+    parteSelect.innerHTML = '<option value="">Seleccione una parte</option>';
+
+    if (productoSeleccionado !== '') {
+        parteSelect.disabled = false;
+
+        const partes = productosData
+            .filter(item => item.producto === productoSeleccionado)
+            .map(item => item.parte);
+
+        const partesUnicas = [...new Set(partes)];
+        partesUnicas.forEach(parte => {
+            const option = document.createElement('option');
+            option.value = parte;
+            option.textContent = parte;
+            parteSelect.appendChild(option);
         });
+    } else {
+        parteSelect.disabled = true;
+    }
 
-        function iniciarSesion() {
-            const usuario = document.getElementById('usuario').value;
-            const clave = document.getElementById('clave').value;
+    desactivarContinuar();
+});
 
-            if (usuario === '' || clave === '') {
-                alert('Por favor seleccione empleado e ingrese clave.');
-                return;
-            }
+document.getElementById('parte').addEventListener('change', function() {
+    const habilitar = this.value !== '';
+    document.getElementById('ruta').disabled = !habilitar;
+    document.getElementById('maquina').disabled = !habilitar;
+    document.getElementById('proceso').disabled = !habilitar;
+    validarSeleccion();
+});
 
-            localStorage.setItem('empleado', usuario);
+function validarSeleccion() {
+    const proyecto = document.getElementById('proyecto').value;
+    const producto = document.getElementById('producto').value;
+    const parte = document.getElementById('parte').value;
+    const ruta = document.getElementById('ruta').value;
+    const maquina = document.getElementById('maquina').value;
+    const proceso = document.getElementById('proceso').value;
 
-            document.getElementById('pantalla-login').classList.add('hidden');
-            document.getElementById('pantalla-seleccion').classList.remove('hidden');
-        }
+    const habilitar = proyecto && producto && parte && ruta && maquina && proceso;
+    document.getElementById('btnContinuar').disabled = !habilitar;
+}
 
-        function cargarProductos() {
-            const productoSelect = document.getElementById('producto');
-            productoSelect.disabled = false;
+function desactivarContinuar() {
+    document.getElementById('ruta').disabled = true;
+    document.getElementById('maquina').disabled = true;
+    document.getElementById('proceso').disabled = true;
+    document.getElementById('btnContinuar').disabled = true;
+}
 
-            const productosUnicos = [...new Set(productosData.map(item => item.producto))];
-            productosUnicos.forEach(producto => {
-                const option = document.createElement('option');
-                option.value = producto;
-                option.textContent = producto;
-                productoSelect.appendChild(option);
-            });
-        }
+document.querySelectorAll('#ruta, #maquina, #proceso').forEach(select => {
+    select.addEventListener('change', validarSeleccion);
+});
 
-        document.getElementById('producto').addEventListener('change', function() {
-            const productoSeleccionado = this.value;
-            const parteSelect = document.getElementById('parte');
-            parteSelect.innerHTML = '<option value="">Seleccione una parte</option>';
+function mostrarPantallaFinal() {
+    const empleado = localStorage.getItem('empleado');
+    const proyecto = document.getElementById('proyecto').value;
+    const producto = document.getElementById('producto').value;
+    const parte = document.getElementById('parte').value;
+    const ruta = document.getElementById('ruta').value;
+    const maquina = document.getElementById('maquina').value;
+    const proceso = document.getElementById('proceso').value;
 
-            if (productoSeleccionado !== '') {
-                parteSelect.disabled = false;
+    document.getElementById('resumen').innerHTML = `
+        <p><strong>Empleado:</strong> ${empleado}</p>
+        <p><strong>Proyecto:</strong> ${proyecto}</p>
+        <p><strong>Producto:</strong> ${producto}</p>
+        <p><strong>Parte:</strong> ${parte}</p>
+        <p><strong>Ruta:</strong> ${ruta}</p>
+        <p><strong>Máquina:</strong> ${maquina}</p>
+        <p><strong>Proceso:</strong> ${proceso}</p>
+    `;
 
-                const partes = productosData
-                    .filter(item => item.producto === productoSeleccionado)
-                    .map(item => item.parte);
+    document.getElementById('pantalla-seleccion').classList.add('hidden');
+    document.getElementById('pantalla-finalizar').classList.remove('hidden');
+}
 
-                const partesUnicas = [...new Set(partes)];
-                partesUnicas.forEach(parte => {
-                    const option = document.createElement('option');
-                    option.value = parte;
-                    option.textContent = parte;
-                    parteSelect.appendChild(option);
-                });
-            } else {
-                parteSelect.disabled = true;
-            }
+function validarPiezas() {
+    const piezas = document.getElementById('piezas').value;
+    const btnFinalizar = document.getElementById('btnFinalizar');
+    btnFinalizar.disabled = !(piezas.trim() !== '' && parseFloat(piezas) > 0);
+}
 
-            desactivarContinuar();
-        });
+function finalizarProceso() {
+    const piezas = document.getElementById('piezas').value;
 
-        document.getElementById('parte').addEventListener('change', function() {
-            const habilitar = this.value !== '';
-            document.getElementById('ruta').disabled = !habilitar;
-            document.getElementById('maquina').disabled = !habilitar;
-            document.getElementById('proceso').disabled = !habilitar;
-            validarSeleccion();
-        });
+    if (piezas.trim() === '' || parseFloat(piezas) <= 0) {
+        alert('Por favor ingrese un número de piezas válido.');
+        return;
+    }
 
-        function validarSeleccion() {
-            const proyecto = document.getElementById('proyecto').value;
-            const producto = document.getElementById('producto').value;
-            const parte = document.getElementById('parte').value;
-            const ruta = document.getElementById('ruta').value;
-            const maquina = document.getElementById('maquina').value;
-            const proceso = document.getElementById('proceso').value;
+    alert(`Registro guardado con ${piezas} piezas.`);
 
-            const habilitar = proyecto && producto && parte && ruta && maquina && proceso;
-            document.getElementById('btnContinuar').disabled = !habilitar;
-        }
-
-        function desactivarContinuar() {
-            document.getElementById('ruta').disabled = true;
-            document.getElementById('maquina').disabled = true;
-            document.getElementById('proceso').disabled = true;
-            document.getElementById('btnContinuar').disabled = true;
-        }
-
-        document.querySelectorAll('#ruta, #maquina, #proceso').forEach(select => {
-            select.addEventListener('change', validarSeleccion);
-        });
-
-        function mostrarPantallaFinal() {
-            const empleado = localStorage.getItem('empleado');
-            const proyecto = document.getElementById('proyecto').value;
-            const producto = document.getElementById('producto').value;
-            const parte = document.getElementById('parte').value;
-            const ruta = document.getElementById('ruta').value;
-            const maquina = document.getElementById('maquina').value;
-            const proceso = document.getElementById('proceso').value;
-
-            document.getElementById('resumen').innerHTML = `
-                <p><strong>Empleado:</strong> ${empleado}</p>
-                <p><strong>Proyecto:</strong> ${proyecto}</p>
-                <p><strong>Producto:</strong> ${producto}</p>
-                <p><strong>Parte:</strong> ${parte}</p>
-                <p><strong>Ruta:</strong> ${ruta}</p>
-                <p><strong>Máquina:</strong> ${maquina}</p>
-                <p><strong>Proceso:</strong> ${proceso}</p>
-            `;
-
-            document.getElementById('pantalla-seleccion').classList.add('hidden');
-            document.getElementById('pantalla-finalizar').classList.remove('hidden');
-        }
-
-        function validarPiezas() {
-            const piezas = document.getElementById('piezas').value;
-            const btnFinalizar = document.getElementById('btnFinalizar');
-            btnFinalizar.disabled = !(piezas.trim() !== '' && parseFloat(piezas) > 0);
-        }
-
-        function finalizarProceso() {
-            const piezas = document.getElementById('piezas').value;
-
-            if (piezas.trim() === '' || parseFloat(piezas) <= 0) {
-                alert('Por favor ingrese un número de piezas válido.');
-                return;
-            }
-
-            alert(`Registro guardado con ${piezas} piezas.`);
-
-            // Aquí podrías reiniciar todo o guardar en un CSV/Google Sheet
-            window.location.reload();
-        }
-    </script>
+    window.location.reload();
+}
+</script>
 </body>
 </html>
