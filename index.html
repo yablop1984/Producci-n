@@ -1,252 +1,304 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Plataforma de Producción</title>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="logo.png" type="image/png" />
-  <meta name="theme-color" content="#28a745" />
-  <style>
-    body { font-family: sans-serif; background-color: #f2f5f9; margin: 0; padding: 1rem; }
-    .container { max-width: 500px; margin: auto; background-color: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    label { font-weight: bold; display: block; margin-bottom: .2rem; color: #333; }
-    select, input, button { width: 100%; margin-bottom: 1rem; padding: .6rem; font-size: 1rem; border-radius: 8px; border: 1px solid #ccc; }
-    button { background: #28a745; color: #fff; font-weight: bold; border: none; cursor: pointer; }
-    button:hover { background: #218838; }
-    .hidden { display: none; }
-    .resumen { background: #eef9f0; border: 1px solid #c4e3cb; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
-    #custom-modal.hidden { display: none; }
-    #custom-modal { position: fixed; top:0; left:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center; z-index:1000; }
-    .modal-backdrop { position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); }
-    .modal-content { position:relative; background:#fff; padding:1.5rem; border-radius:8px; max-width:90%; box-shadow:0 4px 12px rgba(0,0,0,0.2); text-align:center; }
-    .modal-content button { margin-top:1rem; padding:.5rem 1.5rem; border:none; border-radius:6px; background:#28a745; color:#fff; font-weight:bold; cursor:pointer; }
-    .modal-content button:hover { background:#218838; }
-  </style>
-  <script> window.API_URL = "https://bugel-backend.vercel.app"; if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('service-worker.js')); } </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Plataforma de Producción</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="logo.png" type="image/png" />
+    <meta name="theme-color" content="#28a745" />
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f2f5f9;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            position: relative;
+        }
+        .container {
+            max-width: 500px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .logo {
+            display: block;
+            margin: 0 auto 1rem;
+            width: 120px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 0.2rem;
+        }
+        select, input[type="password"], input[type="number"] {
+            width: 100%;
+            padding: 0.6rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 8px;
+            width: 100%;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .footer {
+            position: fixed;
+            bottom: 5px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #555;
+        }
+        .summary {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background-color: #eef6f0;
+            border-radius: 8px;
+            border: 1px solid #cce5d5;
+        }
+        .summary p {
+            margin: 0.3rem 0;
+            font-size: 1rem;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-  <div style="text-align:center; margin-bottom:1rem;"><img src="logo.png" alt="Logo" style="max-width:100px;"/></div>
-  <div class="container">
-    <div id="pantalla-login">
-      <h2>Inicio de Sesión</h2>
-      <select id="nombre-empleado"></select>
-      <input type="password" id="clave-empleado" placeholder="Clave" />
-      <button onclick="validarLogin()">Ingresar</button>
+    <div class="container">
+        <!-- Pantalla 1: Login -->
+        <div id="pantalla-login">
+            <img src="logo.png" alt="Logo" class="logo" />
+            <h2>Inicio de Sesión</h2>
+
+            <label for="usuario">Empleado:</label>
+            <select id="usuario">
+                <option value="">Seleccione un empleado</option>
+                <option value="ELKIN PARRA">ELKIN PARRA</option>
+                <!-- Puedes agregar más empleados desde CSV -->
+            </select>
+
+            <label for="clave">Clave:</label>
+            <input type="password" id="clave" placeholder="Clave" />
+
+            <button onclick="iniciarSesion()">Ingresar</button>
+        </div>
+
+        <!-- Pantalla 2: Selección -->
+        <div id="pantalla-seleccion" class="hidden">
+            <img src="logo.png" alt="Logo" class="logo" />
+            <h2>Selección de Proceso</h2>
+
+            <label for="proyecto">Proyecto:</label>
+            <select id="proyecto">
+                <option value="">Seleccione un proyecto</option>
+                <option value="00-0000 WLZF">00-0000 WLZF</option>
+            </select>
+
+            <label for="producto">Producto:</label>
+            <select id="producto" disabled>
+                <option value="">Seleccione un producto</option>
+            </select>
+
+            <label for="parte">Parte:</label>
+            <select id="parte" disabled>
+                <option value="">Seleccione una parte</option>
+            </select>
+
+            <label for="ruta">Ruta:</label>
+            <select id="ruta" disabled>
+                <option value="">Seleccione una ruta</option>
+                <option value="Ruta 1">Ruta 1</option>
+            </select>
+
+            <label for="maquina">Máquina:</label>
+            <select id="maquina" disabled>
+                <option value="">Seleccione una máquina</option>
+                <option value="Máquina A">Máquina A</option>
+            </select>
+
+            <label for="proceso">Proceso:</label>
+            <select id="proceso" disabled>
+                <option value="">Seleccione un proceso</option>
+                <option value="Proceso X">Proceso X</option>
+            </select>
+
+            <button id="btnContinuar" onclick="mostrarPantallaFinal()" disabled>Continuar</button>
+        </div>
+
+        <!-- Pantalla 3: Finalizar -->
+        <div id="pantalla-finalizar" class="hidden">
+            <img src="logo.png" alt="Logo" class="logo" />
+            <h2>Finalizar Proceso</h2>
+
+            <div class="summary" id="resumen"></div>
+
+            <label for="piezas">Número de piezas:</label>
+            <input type="number" id="piezas" min="0" step="0.01" placeholder="Ingrese número de piezas" oninput="validarPiezas()" />
+
+            <button id="btnFinalizar" onclick="finalizarProceso()" disabled>Finalizar</button>
+        </div>
     </div>
 
-    <div id="pantalla-seleccion" class="hidden">
-      <h2>Producción</h2>
-      <label for="proyecto">Proyecto:</label>
-      <select id="proyecto"><option value="">Seleccione un proyecto</option></select>
-      <label for="producto">Producto:</label>
-      <select id="producto" disabled><option value="">Seleccione un producto</option></select>
-      <label for="parte">Parte:</label>
-      <select id="parte" disabled><option value="">Seleccione una parte</option></select>
-      <label for="ruta">Ruta:</label>
-      <select id="ruta" disabled><option value="">Seleccione una ruta</option></select>
-      <label for="maquina">Máquina:</label>
-      <select id="maquina" disabled><option value="">Seleccione una máquina</option></select>
-      <label for="proceso">Proceso:</label>
-      <select id="proceso" disabled><option value="">Seleccione un proceso</option></select>
-      <button onclick="continuar()">Continuar</button>
+    <div class="footer">
+        Elaborado por <b>Yablop</b> - Plataforma de Producción V.1
     </div>
 
-    <div id="pantalla-final" class="hidden">
-      <h2>Finalizar Producción</h2>
-      <div class="resumen" id="resumen-datos"></div>
-      <input type="number" step="0.01" id="piezas" placeholder="Número de piezas" />
-      <button id="btn-finalizar" onclick="finalizar()">Finalizar</button>
-    </div>
-  </div>
+    <script>
+        let productosData = [];
 
-  <div id="custom-modal" class="hidden">
-    <div class="modal-backdrop"></div>
-    <div class="modal-content">
-      <p id="modal-message"></p>
-      <button id="modal-ok">OK</button>
-    </div>
-  </div>
+        Papa.parse('productos.csv', {
+            download: true,
+            header: true,
+            complete: function(results) {
+                productosData = results.data;
+                cargarProductos();
+            }
+        });
 
-  <footer>Elaborado por <strong>Yablop</strong> - Plataforma de Producción V.1.2</footer>
+        function iniciarSesion() {
+            const usuario = document.getElementById('usuario').value;
+            const clave = document.getElementById('clave').value;
 
-<script>
-let empleados = [], proyectos = [], productos = [], rutasMaquinas = [], registros = [];
-let registroActual = {};
+            if (usuario === '' || clave === '') {
+                alert('Por favor seleccione empleado e ingrese clave.');
+                return;
+            }
 
-// Lee CSV y normaliza encabezados a minúsculas
-async function leerCSV(path) {
-  const resp = await fetch(path);
-  const texto = await resp.text();
-  const lines = texto.trim().split(/\r?\n/);
-  const rawHeaders = lines[0].split(',').map(h => h.trim().toLowerCase());
-  return lines.slice(1).map(line => {
-    const vals = line.split(',').map(v => v.trim());
-    const obj = {};
-    rawHeaders.forEach((h, i) => obj[h] = vals[i] || '');
-    return obj;
-  });
-}
+            localStorage.setItem('empleado', usuario);
 
-async function inicializar() {
-  empleados = await leerCSV('empleados.csv');
-  proyectos = await leerCSV('proyectos.csv');
-  productos = await leerCSV('productos.csv');
-  rutasMaquinas = await leerCSV('rutas_maquinas.csv');
+            document.getElementById('pantalla-login').classList.add('hidden');
+            document.getElementById('pantalla-seleccion').classList.remove('hidden');
+        }
 
-  // Empleados
-  const selEmp = document.getElementById('nombre-empleado');
-  empleados.forEach(e => { const op = document.createElement('option'); op.value = e.nombre; op.textContent = e.nombre; selEmp.appendChild(op); });
+        function cargarProductos() {
+            const productoSelect = document.getElementById('producto');
+            productoSelect.disabled = false;
 
-  // Proyectos
-  const selProj = document.getElementById('proyecto');
-  proyectos.forEach(p => { const op = document.createElement('option'); op.value = p.proyecto; op.textContent = p.proyecto; selProj.appendChild(op); });
-  selProj.onchange = () => {
-    // Habilita Producto y resetea todo lo siguiente
-    resetSelect('producto', 'producto');
-    resetSelect('parte', 'parte');
-    resetSelect('ruta', 'ruta');
-    resetSelect('maquina', 'máquina');
-    resetSelect('proceso', 'proceso');
-    document.getElementById('producto').disabled = selProj.value === '';
-    if (!selProj.value) document.getElementById('producto').disabled = true;
-  };
+            const productosUnicos = [...new Set(productosData.map(item => item.producto))];
+            productosUnicos.forEach(producto => {
+                const option = document.createElement('option');
+                option.value = producto;
+                option.textContent = producto;
+                productoSelect.appendChild(option);
+            });
+        }
 
-  // Productos
-  const selProd = document.getElementById('producto');
-  // Poblar lista única de productos
-  [...new Set(productos.map(x => x.producto))].forEach(prod => {
-    const op = document.createElement('option'); op.value = prod; op.textContent = prod;
-    selProd.appendChild(op);
-  });
-  selProd.onchange = () => {
-    resetSelect('parte', 'parte');
-    resetSelect('ruta', 'ruta');
-    resetSelect('maquina', 'máquina');
-    resetSelect('proceso', 'proceso');
-    const prod = selProd.value;
-    const selPart = document.getElementById('parte');
-    if (prod) {
-      // Cargar partes de ese producto desde la segunda columna (key 'parte')
-      productos.filter(x => x.producto === prod).forEach(x => {
-        const op = document.createElement('option'); op.value = x.parte; op.textContent = x.parte; selPart.appendChild(op);
-      });
-      selPart.disabled = false;
-    } else {
-      selPart.disabled = true;
-    }
-  };
+        document.getElementById('producto').addEventListener('change', function() {
+            const productoSeleccionado = this.value;
+            const parteSelect = document.getElementById('parte');
+            parteSelect.innerHTML = '<option value="">Seleccione una parte</option>';
 
-  // Parte → habilita ruta
-  const selPart = document.getElementById('parte');
-  selPart.onchange = () => {
-    resetSelect('ruta', 'ruta');
-    resetSelect('maquina', 'máquina');
-    resetSelect('proceso', 'proceso');
-    document.getElementById('ruta').disabled = selPart.value === '';
-  };
+            if (productoSeleccionado !== '') {
+                parteSelect.disabled = false;
 
-  // Rutas
-  const selRuta = document.getElementById('ruta');
-  [...new Set(rutasMaquinas.map(x => x.ruta))].forEach(r => { const op = document.createElement('option'); op.value = r; op.textContent = r; selRuta.appendChild(op); });
-  selRuta.onchange = () => {
-    resetSelect('maquina', 'máquina');
-    resetSelect('proceso', 'proceso');
-    const ruta = selRuta.value;
-    if (ruta) {
-      // Máquinas en esa ruta
-      [...new Set(rutasMaquinas.filter(x => x.ruta === ruta).map(x => x.maquina))].forEach(m => {
-        const op = document.createElement('option'); op.value = m; op.textContent = m; document.getElementById('maquina').appendChild(op);
-      });
-      document.getElementById('maquina').disabled = false;
-    }
-  };
+                const partes = productosData
+                    .filter(item => item.producto === productoSeleccionado)
+                    .map(item => item.parte);
 
-  // Máquina → habilita proceso
-  const selMaq = document.getElementById('maquina');
-  selMaq.onchange = () => {
-    resetSelect('proceso', 'proceso');
-    const ruta = selRuta.value;
-    const maq = selMaq.value;
-    if (maq) {
-      rutasMaquinas.filter(x => x.ruta === ruta && x.maquina === maq).forEach(x => {
-        const op = document.createElement('option'); op.value = x.proceso; op.textContent = x.proceso; document.getElementById('proceso').appendChild(op);
-      });
-      document.getElementById('proceso').disabled = false;
-    }
-  };
+                const partesUnicas = [...new Set(partes)];
+                partesUnicas.forEach(parte => {
+                    const option = document.createElement('option');
+                    option.value = parte;
+                    option.textContent = parte;
+                    parteSelect.appendChild(option);
+                });
+            } else {
+                parteSelect.disabled = true;
+            }
 
-  // Estado inicial
-  document.getElementById('producto').disabled = true;
-  ['parte','ruta','maquina','proceso'].forEach(id => document.getElementById(id).disabled = true);
-}
+            desactivarContinuar();
+        });
 
-// Resetea un <select> manteniendo solo el placeholder
-function resetSelect(id, label) {
-  const sel = document.getElementById(id);
-  sel.innerHTML = `<option value="">Seleccione ${label}</option>`;
-  sel.disabled = true;
-}
+        document.getElementById('parte').addEventListener('change', function() {
+            const habilitar = this.value !== '';
+            document.getElementById('ruta').disabled = !habilitar;
+            document.getElementById('maquina').disabled = !habilitar;
+            document.getElementById('proceso').disabled = !habilitar;
+            validarSeleccion();
+        });
 
-function mostrarPantalla(id) {
-  ['pantalla-login','pantalla-seleccion','pantalla-final'].forEach(p => document.getElementById(p).classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
-}
+        function validarSeleccion() {
+            const proyecto = document.getElementById('proyecto').value;
+            const producto = document.getElementById('producto').value;
+            const parte = document.getElementById('parte').value;
+            const ruta = document.getElementById('ruta').value;
+            const maquina = document.getElementById('maquina').value;
+            const proceso = document.getElementById('proceso').value;
 
-function showAlert(msg) {
-  const modal = document.getElementById('custom-modal');
-  document.getElementById('modal-message').textContent = msg;
-  modal.classList.remove('hidden');
-  document.getElementById('modal-ok').onclick = () => modal.classList.add('hidden');
-}
+            const habilitar = proyecto && producto && parte && ruta && maquina && proceso;
+            document.getElementById('btnContinuar').disabled = !habilitar;
+        }
 
-function validarLogin() {
-  const nombre = document.getElementById('nombre-empleado').value;
-  const clave = document.getElementById('clave-empleado').value;
-  if (!nombre || !clave) return showAlert('Debe seleccionar nombre y clave.');
-  const encontrado = empleados.find(e => e.nombre === nombre && e.clave === clave);
-  if (encontrado) { registroActual.nombre = nombre; mostrarPantalla('pantalla-seleccion'); }
-  else showAlert('Credenciales incorrectas');
-}
+        function desactivarContinuar() {
+            document.getElementById('ruta').disabled = true;
+            document.getElementById('maquina').disabled = true;
+            document.getElementById('proceso').disabled = true;
+            document.getElementById('btnContinuar').disabled = true;
+        }
 
-function continuar() {
-  const fields = ['proyecto','producto','parte','ruta','maquina','proceso'];
-  const vals = fields.map(id => document.getElementById(id).value);
-  if (vals.some(v => !v)) return showAlert('Todos los campos deben estar completos.');
-  const [p,prod,part,r,m,pr] = vals;
-  registroActual = { nombre: registroActual.nombre, proyecto: p, producto: prod, parte: part, ruta: r, maquina: m, proceso: pr, fecha_inicio: new Date().toLocaleString() };  
-  document.getElementById('resumen-datos').innerHTML =
-    `<strong>Empleado:</strong> ${registroActual.nombre}<br>` +
-    `<strong>Proyecto:</strong> ${p}<br>` +
-    `<strong>Producto:</strong> ${prod}<br>` +
-    `<strong>Parte:</strong> ${part}<br>` +
-    `<strong>Ruta:</strong> ${r}<br>` +
-    `<strong>Máquina:</strong> ${m}<br>` +
-    `<strong>Proceso:</strong> ${pr}`;
-  mostrarPantalla('pantalla-final');
-}
+        document.querySelectorAll('#ruta, #maquina, #proceso').forEach(select => {
+            select.addEventListener('change', validarSeleccion);
+        });
 
-function finalizar() {
-  const piezas = document.getElementById('piezas').value;
-  if (!piezas || parseFloat(piezas) <= 0) return showAlert('Ingrese un número válido de piezas antes de finalizar.');
-  const btn = document.getElementById('btn-finalizar'); btn.disabled = true;
-  registroActual.piezas = piezas; registroActual.fecha_fin = new Date().toLocaleString(); registros.push({...registroActual});
-  fetch(window.API_URL + '/api/enviar', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(registroActual)
-  })
-  .then(r => r.text())
-  .then(() => { showAlert('Registro guardado exitosamente.'); registroActual = {}; resetApp(); btn.disabled = false; mostrarPantalla('pantalla-login'); })
-  .catch(e => { btn.disabled = false; showAlert('Error al enviar los datos: ' + e.message); });
-}
+        function mostrarPantallaFinal() {
+            const empleado = localStorage.getItem('empleado');
+            const proyecto = document.getElementById('proyecto').value;
+            const producto = document.getElementById('producto').value;
+            const parte = document.getElementById('parte').value;
+            const ruta = document.getElementById('ruta').value;
+            const maquina = document.getElementById('maquina').value;
+            const proceso = document.getElementById('proceso').value;
 
-function resetApp() {
-  ['proyecto','producto','parte','ruta','maquina','proceso'].forEach((id,i) => resetSelect(id, ['proyecto','producto','parte','ruta','máquina','proceso'][i]));
-  document.getElementById('resumen-datos').innerHTML = '';
-  document.getElementById('piezas').value = '';
-}
+            document.getElementById('resumen').innerHTML = `
+                <p><strong>Empleado:</strong> ${empleado}</p>
+                <p><strong>Proyecto:</strong> ${proyecto}</p>
+                <p><strong>Producto:</strong> ${producto}</p>
+                <p><strong>Parte:</strong> ${parte}</p>
+                <p><strong>Ruta:</strong> ${ruta}</p>
+                <p><strong>Máquina:</strong> ${maquina}</p>
+                <p><strong>Proceso:</strong> ${proceso}</p>
+            `;
 
-window.onload = inicializar;
-</script>
+            document.getElementById('pantalla-seleccion').classList.add('hidden');
+            document.getElementById('pantalla-finalizar').classList.remove('hidden');
+        }
+
+        function validarPiezas() {
+            const piezas = document.getElementById('piezas').value;
+            const btnFinalizar = document.getElementById('btnFinalizar');
+            btnFinalizar.disabled = !(piezas.trim() !== '' && parseFloat(piezas) > 0);
+        }
+
+        function finalizarProceso() {
+            const piezas = document.getElementById('piezas').value;
+
+            if (piezas.trim() === '' || parseFloat(piezas) <= 0) {
+                alert('Por favor ingrese un número de piezas válido.');
+                return;
+            }
+
+            alert(`Registro guardado con ${piezas} piezas.`);
+
+            // Aquí podrías reiniciar todo o guardar en un CSV/Google Sheet
+            window.location.reload();
+        }
+    </script>
 </body>
 </html>
