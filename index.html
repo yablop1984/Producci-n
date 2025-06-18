@@ -68,17 +68,24 @@
     </div>
   </div>
 
-  <footer>Elaborado por <strong>Yablop</strong> - Plataforma de Producción V.1</footer>
+  <footer>Elaborado por <strong>Yablop</strong> - Plataforma de Producción V.1.2</footer>
 
 <script>
 let empleados = [], proyectos = [], productos = [], rutasMaquinas = [], registros = [];
 let registroActual = {};
 
+// Lee CSV y normaliza encabezados a minúsculas
 async function leerCSV(path) {
   const resp = await fetch(path);
   const texto = await resp.text();
-  const [cab, ...filas] = texto.trim().split('\n').map(l => l.split(','));
-  return filas.map(f => Object.fromEntries(f.map((v, i) => [cab[i], v])));
+  const lines = texto.trim().split(/\r?\n/);
+  const rawHeaders = lines[0].split(',').map(h => h.trim().toLowerCase());
+  return lines.slice(1).map(line => {
+    const vals = line.split(',').map(v => v.trim());
+    const obj = {};
+    rawHeaders.forEach((h, i) => obj[h] = vals[i] || '');
+    return obj;
+  });
 }
 
 async function inicializar() {
@@ -87,54 +94,50 @@ async function inicializar() {
   productos = await leerCSV('productos.csv');
   rutasMaquinas = await leerCSV('rutas_maquinas.csv');
 
-  // Poblar empleados
+  // Empleados
   const selEmp = document.getElementById('nombre-empleado');
-  empleados.forEach(e => {
-    const op = document.createElement('option'); op.value = e.nombre; op.textContent = e.nombre;
-    selEmp.appendChild(op);
-  });
+  empleados.forEach(e => { const op = document.createElement('option'); op.value = e.nombre; op.textContent = e.nombre; selEmp.appendChild(op); });
 
-  // Poblar proyectos
+  // Proyectos
   const selProj = document.getElementById('proyecto');
-  proyectos.forEach(p => {
-    const op = document.createElement('option'); op.value = p.proyecto; op.textContent = p.proyecto;
-    selProj.appendChild(op);
-  });
-  // Al seleccionar proyecto habilita producto
+  proyectos.forEach(p => { const op = document.createElement('option'); op.value = p.proyecto; op.textContent = p.proyecto; selProj.appendChild(op); });
   selProj.onchange = () => {
+    // Habilita Producto y resetea todo lo siguiente
+    resetSelect('producto', 'producto');
     resetSelect('parte', 'parte');
     resetSelect('ruta', 'ruta');
     resetSelect('maquina', 'máquina');
     resetSelect('proceso', 'proceso');
     document.getElementById('producto').disabled = selProj.value === '';
+    if (!selProj.value) document.getElementById('producto').disabled = true;
   };
 
-  // Poblar productos (único lista)
+  // Productos
   const selProd = document.getElementById('producto');
-  productos.forEach(item => {
-    const op = document.createElement('option'); op.value = item.producto; op.textContent = item.producto;
+  // Poblar lista única de productos
+  [...new Set(productos.map(x => x.producto))].forEach(prod => {
+    const op = document.createElement('option'); op.value = prod; op.textContent = prod;
     selProd.appendChild(op);
   });
-  // Al seleccionar producto habilita parte
   selProd.onchange = () => {
     resetSelect('parte', 'parte');
     resetSelect('ruta', 'ruta');
     resetSelect('maquina', 'máquina');
     resetSelect('proceso', 'proceso');
     const prod = selProd.value;
+    const selPart = document.getElementById('parte');
     if (prod) {
-      const selPart = document.getElementById('parte');
+      // Cargar partes de ese producto desde la segunda columna (key 'parte')
       productos.filter(x => x.producto === prod).forEach(x => {
-        const op = document.createElement('option'); op.value = x.parte; op.textContent = x.parte;
-        selPart.appendChild(op);
+        const op = document.createElement('option'); op.value = x.parte; op.textContent = x.parte; selPart.appendChild(op);
       });
       selPart.disabled = false;
     } else {
-      document.getElementById('parte').disabled = true;
+      selPart.disabled = true;
     }
   };
 
-  // Al seleccionar parte habilita ruta
+  // Parte → habilita ruta
   const selPart = document.getElementById('parte');
   selPart.onchange = () => {
     resetSelect('ruta', 'ruta');
@@ -143,47 +146,42 @@ async function inicializar() {
     document.getElementById('ruta').disabled = selPart.value === '';
   };
 
-  // Poblar rutas
+  // Rutas
   const selRuta = document.getElementById('ruta');
-  [...new Set(rutasMaquinas.map(r => r.ruta))].forEach(r => {
-    const op = document.createElement('option'); op.value = r; op.textContent = r;
-    selRuta.appendChild(op);
-  });
-  // Al seleccionar ruta habilita máquina
+  [...new Set(rutasMaquinas.map(x => x.ruta))].forEach(r => { const op = document.createElement('option'); op.value = r; op.textContent = r; selRuta.appendChild(op); });
   selRuta.onchange = () => {
     resetSelect('maquina', 'máquina');
     resetSelect('proceso', 'proceso');
     const ruta = selRuta.value;
     if (ruta) {
-      const selMaq = document.getElementById('maquina');
-      [...new Set(rutasMaquinas.filter(x => x.ruta === ruta).map(x => x.maquina))]
-        .forEach(m => { const op = document.createElement('option'); op.value = m; op.textContent = m; selMaq.appendChild(op); });
-      selMaq.disabled = false;
+      // Máquinas en esa ruta
+      [...new Set(rutasMaquinas.filter(x => x.ruta === ruta).map(x => x.maquina))].forEach(m => {
+        const op = document.createElement('option'); op.value = m; op.textContent = m; document.getElementById('maquina').appendChild(op);
+      });
+      document.getElementById('maquina').disabled = false;
     }
   };
 
-  // Al seleccionar máquina habilita proceso
+  // Máquina → habilita proceso
   const selMaq = document.getElementById('maquina');
   selMaq.onchange = () => {
     resetSelect('proceso', 'proceso');
     const ruta = selRuta.value;
     const maq = selMaq.value;
     if (maq) {
-      const selProc = document.getElementById('proceso');
       rutasMaquinas.filter(x => x.ruta === ruta && x.maquina === maq).forEach(x => {
-        const op = document.createElement('option'); op.value = x.proceso; op.textContent = x.proceso;
-        selProc.appendChild(op);
+        const op = document.createElement('option'); op.value = x.proceso; op.textContent = x.proceso; document.getElementById('proceso').appendChild(op);
       });
-      selProc.disabled = false;
+      document.getElementById('proceso').disabled = false;
     }
   };
 
-  // Deshabilitar inicialmente
+  // Estado inicial
   document.getElementById('producto').disabled = true;
   ['parte','ruta','maquina','proceso'].forEach(id => document.getElementById(id).disabled = true);
 }
 
-// Resetea un select manteniendo su placeholder
+// Resetea un <select> manteniendo solo el placeholder
 function resetSelect(id, label) {
   const sel = document.getElementById(id);
   sel.innerHTML = `<option value="">Seleccione ${label}</option>`;
@@ -212,10 +210,11 @@ function validarLogin() {
 }
 
 function continuar() {
-  const vals = ['proyecto','producto','parte','ruta','maquina','proceso'].map(id => document.getElementById(id).value);
+  const fields = ['proyecto','producto','parte','ruta','maquina','proceso'];
+  const vals = fields.map(id => document.getElementById(id).value);
   if (vals.some(v => !v)) return showAlert('Todos los campos deben estar completos.');
-  const [p, prod, part, r, m, pr] = vals;
-  registroActual = { nombre: registroActual.nombre, proyecto: p, producto: prod, parte: part, ruta: r, maquina: m, proceso: pr, fecha_inicio: new Date().toLocaleString() };
+  const [p,prod,part,r,m,pr] = vals;
+  registroActual = { nombre: registroActual.nombre, proyecto: p, producto: prod, parte: part, ruta: r, maquina: m, proceso: pr, fecha_inicio: new Date().toLocaleString() };  
   document.getElementById('resumen-datos').innerHTML =
     `<strong>Empleado:</strong> ${registroActual.nombre}<br>` +
     `<strong>Proyecto:</strong> ${p}<br>` +
