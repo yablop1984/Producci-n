@@ -196,6 +196,7 @@ async function inicializar() {
   selRuta.disabled = false;
 }
 
+// Función para mostrar alertas personalizadas
 function showAlert(msg) {
   const modal = document.getElementById('custom-modal');
   document.getElementById('modal-message').textContent = msg;
@@ -266,11 +267,11 @@ function continuar() {
   registroActual.fecha_inicio = new Date().toLocaleString();
 
   document.getElementById("resumen-datos").innerHTML =
-    <strong>Empleado:</strong> ${registroActual.nombre}<br>
+    `<strong>Empleado:</strong> ${registroActual.nombre}<br>
      <strong>Proyecto:</strong> ${p}<br>
      <strong>Ruta:</strong> ${r}<br>
      <strong>Máquina:</strong> ${m}<br>
-     <strong>Proceso:</strong> ${pr};
+     <strong>Proceso:</strong> ${pr}`;
 
   mostrarPantalla('pantalla-final');
 }
@@ -296,7 +297,7 @@ function finalizar() {
     .then(() => {
       showAlert('Registro guardado exitosamente.');
       registroActual = {};
-      resetearCampos();
+      document.getElementById('piezas').value = '';
       btn.disabled = false;
       mostrarPantalla('pantalla-login');
     })
@@ -311,17 +312,6 @@ function mostrarPantalla(id) {
     document.getElementById(p).classList.add('hidden');
   });
   document.getElementById(id).classList.remove('hidden');
-}
-
-function resetearCampos() {
-  document.getElementById('proyecto').value = '';
-  document.getElementById('ruta').value = '';
-  document.getElementById('maquina').innerHTML = '<option value="">Seleccione una máquina</option>';
-  document.getElementById('maquina').disabled = true;
-  document.getElementById('proceso').innerHTML = '<option value="">Seleccione un proceso</option>';
-  document.getElementById('proceso').disabled = true;
-  document.getElementById('resumen-datos').innerHTML = '';
-  document.getElementById('piezas').value = '';
 }
 
 window.onload = inicializar;
