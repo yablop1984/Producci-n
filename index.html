@@ -71,121 +71,183 @@
   <footer>Elaborado por <strong>Yablop</strong> - Plataforma de Producción V.1</footer>
 
 <script>
-let empleados=[], proyectos=[], productos=[], rutasMaquinas=[], registros=[];
-let registroActual={};
+let empleados = [], proyectos = [], productos = [], rutasMaquinas = [], registros = [];
+let registroActual = {};
 
-async function leerCSV(path){
-  const resp=await fetch(path);
-  const texto=await resp.text();
-  const [cab,...filas]=texto.trim().split('\n').map(l=>l.split(','));
-  return filas.map(f=>Object.fromEntries(f.map((v,i)=>[cab[i],v])));
+async function leerCSV(path) {
+  const resp = await fetch(path);
+  const texto = await resp.text();
+  const [cab, ...filas] = texto.trim().split('\n').map(l => l.split(','));
+  return filas.map(f => Object.fromEntries(f.map((v, i) => [cab[i], v])));
 }
 
-async function inicializar(){
-  empleados=await leerCSV('empleados.csv');
-  proyectos=await leerCSV('proyectos.csv');
-  productos=await leerCSV('productos.csv');
-  rutasMaquinas=await leerCSV('rutas_maquinas.csv');
+async function inicializar() {
+  empleados = await leerCSV('empleados.csv');
+  proyectos = await leerCSV('proyectos.csv');
+  productos = await leerCSV('productos.csv');
+  rutasMaquinas = await leerCSV('rutas_maquinas.csv');
 
-  const selEmp=document.getElementById('nombre-empleado');
-  empleados.forEach(e=>{const op=document.createElement('option');op.value=e.nombre;op.textContent=e.nombre;selEmp.appendChild(op);});
+  // Poblar empleados
+  const selEmp = document.getElementById('nombre-empleado');
+  empleados.forEach(e => {
+    const op = document.createElement('option'); op.value = e.nombre; op.textContent = e.nombre;
+    selEmp.appendChild(op);
+  });
 
-  const selProj=document.getElementById('proyecto');
-  proyectos.forEach(p=>{const op=document.createElement('option');op.value=p.proyecto;op.textContent=p.proyecto;selProj.appendChild(op);});
-  selProj.onchange=()=>{
-    document.getElementById('producto').disabled=false;
-    resetSelect('producto'); resetSelect('parte'); resetSelect('ruta'); resetSelect('maquina'); resetSelect('proceso');
+  // Poblar proyectos
+  const selProj = document.getElementById('proyecto');
+  proyectos.forEach(p => {
+    const op = document.createElement('option'); op.value = p.proyecto; op.textContent = p.proyecto;
+    selProj.appendChild(op);
+  });
+  // Al seleccionar proyecto habilita producto
+  selProj.onchange = () => {
+    resetSelect('parte', 'parte');
+    resetSelect('ruta', 'ruta');
+    resetSelect('maquina', 'máquina');
+    resetSelect('proceso', 'proceso');
+    document.getElementById('producto').disabled = selProj.value === '';
   };
 
-  const selProd=document.getElementById('producto');
-  productos.forEach(p=>{}); // productos list for later
-  productos.forEach(p=>{});
-  productos.forEach(p=>{});
-  productos.forEach(()=>{});
-  // Populate producto
-  productos.forEach(item=>{const op=document.createElement('option');op.value=item.producto;op.textContent=item.producto;document.getElementById('producto').appendChild(op);});
-  selProd.onchange=()=>{
-    const prod=document.getElementById('producto').value;
-    const selPart=document.getElementById('parte');
-    resetSelect('parte'); resetSelect('ruta'); resetSelect('maquina'); resetSelect('proceso');
-    if(prod){
-      productos.filter(x=>x.producto===prod).forEach(x=>{const op=document.createElement('option');op.value=x.parte;op.textContent=x.parte;selPart.appendChild(op);});
-      selPart.disabled=false;
+  // Poblar productos (único lista)
+  const selProd = document.getElementById('producto');
+  productos.forEach(item => {
+    const op = document.createElement('option'); op.value = item.producto; op.textContent = item.producto;
+    selProd.appendChild(op);
+  });
+  // Al seleccionar producto habilita parte
+  selProd.onchange = () => {
+    resetSelect('parte', 'parte');
+    resetSelect('ruta', 'ruta');
+    resetSelect('maquina', 'máquina');
+    resetSelect('proceso', 'proceso');
+    const prod = selProd.value;
+    if (prod) {
+      const selPart = document.getElementById('parte');
+      productos.filter(x => x.producto === prod).forEach(x => {
+        const op = document.createElement('option'); op.value = x.parte; op.textContent = x.parte;
+        selPart.appendChild(op);
+      });
+      selPart.disabled = false;
+    } else {
+      document.getElementById('parte').disabled = true;
     }
   };
 
-  document.getElementById('parte').onchange=()=>{
-    resetSelect('ruta'); resetSelect('maquina'); resetSelect('proceso');
-    if(document.getElementById('parte').value) document.getElementById('ruta').disabled=false;
+  // Al seleccionar parte habilita ruta
+  const selPart = document.getElementById('parte');
+  selPart.onchange = () => {
+    resetSelect('ruta', 'ruta');
+    resetSelect('maquina', 'máquina');
+    resetSelect('proceso', 'proceso');
+    document.getElementById('ruta').disabled = selPart.value === '';
   };
 
-  // Populate rutas
-  const rutasUnicas=[...new Set(rutasMaquinas.map(r=>r.ruta))];
-  rutasUnicas.forEach(r=>{const op=document.createElement('option');op.value=r;op.textContent=r;document.getElementById('ruta').appendChild(op);});
-
-  document.getElementById('ruta').onchange=()=>{
-    const ruta=document.getElementById('ruta').value;
-    resetSelect('maquina'); resetSelect('proceso');
-    if(ruta){
-      rutasMaquinas.filter(x=>x.ruta===ruta).map(x=>x.maquina).filter((v,i,a)=>a.indexOf(v)===i)
-      .forEach(m=>{const op=document.createElement('option');op.value=m;op.textContent=m;document.getElementById('maquina').appendChild(op);});
-      document.getElementById('maquina').disabled=false;
+  // Poblar rutas
+  const selRuta = document.getElementById('ruta');
+  [...new Set(rutasMaquinas.map(r => r.ruta))].forEach(r => {
+    const op = document.createElement('option'); op.value = r; op.textContent = r;
+    selRuta.appendChild(op);
+  });
+  // Al seleccionar ruta habilita máquina
+  selRuta.onchange = () => {
+    resetSelect('maquina', 'máquina');
+    resetSelect('proceso', 'proceso');
+    const ruta = selRuta.value;
+    if (ruta) {
+      const selMaq = document.getElementById('maquina');
+      [...new Set(rutasMaquinas.filter(x => x.ruta === ruta).map(x => x.maquina))]
+        .forEach(m => { const op = document.createElement('option'); op.value = m; op.textContent = m; selMaq.appendChild(op); });
+      selMaq.disabled = false;
     }
   };
 
-  document.getElementById('maquina').onchange=()=>{
-    const ruta=document.getElementById('ruta').value;
-    const maq=document.getElementById('maquina').value;
-    resetSelect('proceso');
-    if(maq){
-      rutasMaquinas.filter(x=>x.ruta===ruta && x.maquina===maq).forEach(x=>{const op=document.createElement('option');op.value=x.proceso;op.textContent=x.proceso;document.getElementById('proceso').appendChild(op);});
-      document.getElementById('proceso').disabled=false;
+  // Al seleccionar máquina habilita proceso
+  const selMaq = document.getElementById('maquina');
+  selMaq.onchange = () => {
+    resetSelect('proceso', 'proceso');
+    const ruta = selRuta.value;
+    const maq = selMaq.value;
+    if (maq) {
+      const selProc = document.getElementById('proceso');
+      rutasMaquinas.filter(x => x.ruta === ruta && x.maquina === maq).forEach(x => {
+        const op = document.createElement('option'); op.value = x.proceso; op.textContent = x.proceso;
+        selProc.appendChild(op);
+      });
+      selProc.disabled = false;
     }
   };
 
-  // Initially disable child selects
-  ['producto','parte','ruta','maquina','proceso'].forEach(id=>{if(id!=='producto') document.getElementById(id).disabled=true;});
+  // Deshabilitar inicialmente
+  document.getElementById('producto').disabled = true;
+  ['parte','ruta','maquina','proceso'].forEach(id => document.getElementById(id).disabled = true);
 }
 
-function resetSelect(id){
-  const sel=document.getElementById(id);
-  sel.innerHTML=`<option value="">Seleccione una ${id}</option>`;
-  sel.disabled=true;
+// Resetea un select manteniendo su placeholder
+function resetSelect(id, label) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = `<option value="">Seleccione ${label}</option>`;
+  sel.disabled = true;
 }
 
-function showAlert(msg){const modal=document.getElementById('custom-modal');document.getElementById('modal-message').textContent=msg;modal.classList.remove('hidden');document.getElementById('modal-ok').onclick=()=>modal.classList.add('hidden');}
+function mostrarPantalla(id) {
+  ['pantalla-login','pantalla-seleccion','pantalla-final'].forEach(p => document.getElementById(p).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
 
-function validarLogin(){const nombre=document.getElementById('nombre-empleado').value;const clave=document.getElementById('clave-empleado').value;if(!nombre||!clave)return showAlert('Debe seleccionar nombre y clave.');const encontrado=empleados.find(e=>e.nombre===nombre&&e.clave===clave);if(encontrado){registroActual.nombre=nombre;mostrarPantalla('pantalla-seleccion');}else showAlert('Credenciales incorrectas');}
+function showAlert(msg) {
+  const modal = document.getElementById('custom-modal');
+  document.getElementById('modal-message').textContent = msg;
+  modal.classList.remove('hidden');
+  document.getElementById('modal-ok').onclick = () => modal.classList.add('hidden');
+}
 
-function continuar(){
-  const get=id=>document.getElementById(id).value;
-  const [p,prod,part,r,m,pr]=['proyecto','producto','parte','ruta','maquina','proceso'].map(get);
-  if(!p||!prod||!part||!r||!m||!pr) return showAlert('Todos los campos deben estar completos.');
-  registroActual={nombre:registroActual.nombre,proyecto:p,producto:prod,parte:part,ruta:r,maquina:m,proceso:pr,fecha_inicio:new Date().toLocaleString()};
-  document.getElementById('resumen-datos').innerHTML=
-    `<strong>Empleado:</strong> ${registroActual.nombre}<br>`+
-    `<strong>Proyecto:</strong> ${p}<br>`+
-    `<strong>Producto:</strong> ${prod}<br>`+
-    `<strong>Parte:</strong> ${part}<br>`+
-    `<strong>Ruta:</strong> ${r}<br>`+
-    `<strong>Máquina:</strong> ${m}<br>`+
+function validarLogin() {
+  const nombre = document.getElementById('nombre-empleado').value;
+  const clave = document.getElementById('clave-empleado').value;
+  if (!nombre || !clave) return showAlert('Debe seleccionar nombre y clave.');
+  const encontrado = empleados.find(e => e.nombre === nombre && e.clave === clave);
+  if (encontrado) { registroActual.nombre = nombre; mostrarPantalla('pantalla-seleccion'); }
+  else showAlert('Credenciales incorrectas');
+}
+
+function continuar() {
+  const vals = ['proyecto','producto','parte','ruta','maquina','proceso'].map(id => document.getElementById(id).value);
+  if (vals.some(v => !v)) return showAlert('Todos los campos deben estar completos.');
+  const [p, prod, part, r, m, pr] = vals;
+  registroActual = { nombre: registroActual.nombre, proyecto: p, producto: prod, parte: part, ruta: r, maquina: m, proceso: pr, fecha_inicio: new Date().toLocaleString() };
+  document.getElementById('resumen-datos').innerHTML =
+    `<strong>Empleado:</strong> ${registroActual.nombre}<br>` +
+    `<strong>Proyecto:</strong> ${p}<br>` +
+    `<strong>Producto:</strong> ${prod}<br>` +
+    `<strong>Parte:</strong> ${part}<br>` +
+    `<strong>Ruta:</strong> ${r}<br>` +
+    `<strong>Máquina:</strong> ${m}<br>` +
     `<strong>Proceso:</strong> ${pr}`;
   mostrarPantalla('pantalla-final');
 }
 
-function finalizar(){
-  const btn=document.getElementById('btn-finalizar'), piezas=document.getElementById('piezas').value;
-  if(!piezas||parseFloat(piezas)<=0) return showAlert('Ingrese un número válido de piezas antes de finalizar.');
-  btn.disabled=true; registroActual.piezas=piezas; registroActual.fecha_fin=new Date().toLocaleString(); registros.push({...registroActual});
-  fetch(window.API_URL+'/api/enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(registroActual)})
-    .then(r=>r.text()).then(()=>{showAlert('Registro guardado exitosamente.');registroActual={};resetApp();btn.disabled=false;mostrarPantalla('pantalla-login');}).catch(e=>{btn.disabled=false;showAlert('Error al enviar los datos: '+e.message);});
+function finalizar() {
+  const piezas = document.getElementById('piezas').value;
+  if (!piezas || parseFloat(piezas) <= 0) return showAlert('Ingrese un número válido de piezas antes de finalizar.');
+  const btn = document.getElementById('btn-finalizar'); btn.disabled = true;
+  registroActual.piezas = piezas; registroActual.fecha_fin = new Date().toLocaleString(); registros.push({...registroActual});
+  fetch(window.API_URL + '/api/enviar', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(registroActual)
+  })
+  .then(r => r.text())
+  .then(() => { showAlert('Registro guardado exitosamente.'); registroActual = {}; resetApp(); btn.disabled = false; mostrarPantalla('pantalla-login'); })
+  .catch(e => { btn.disabled = false; showAlert('Error al enviar los datos: ' + e.message); });
 }
 
-function resetApp(){['proyecto','producto','parte','ruta','maquina','proceso'].forEach(resetSelect);document.getElementById('resumen-datos').innerHTML='';document.getElementById('piezas').value='';}
+function resetApp() {
+  ['proyecto','producto','parte','ruta','maquina','proceso'].forEach((id,i) => resetSelect(id, ['proyecto','producto','parte','ruta','máquina','proceso'][i]));
+  document.getElementById('resumen-datos').innerHTML = '';
+  document.getElementById('piezas').value = '';
+}
 
-function mostrarPantalla(id){['pantalla-login','pantalla-seleccion','pantalla-final'].forEach(p=>document.getElementById(p).classList.add('hidden'));document.getElementById(id).classList.remove('hidden');}
-
-window.onload=inicializar;
+window.onload = inicializar;
 </script>
 </body>
 </html>
