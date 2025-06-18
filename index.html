@@ -199,7 +199,51 @@
     </div>
 
 <script>
-// ... variables y funciones de inicialización se mantienen igual
+let empleados = [], proyectos = [], rutasMaquinas = [], productosData = [];
+
+async function leerCSV(path) {
+    const resp = await fetch(path);
+    const texto = await resp.text();
+    const separador = texto.includes(';') ? ';' : ',';
+    const [cab, ...filas] = texto.trim().split('\n').map(l => l.split(separador));
+    return filas.map(f => Object.fromEntries(f.map((v, i) => [cab[i], v])));
+}
+
+async function inicializar() {
+    empleados = await leerCSV('empleados.csv');
+    proyectos = await leerCSV('proyectos.csv');
+    rutasMaquinas = await leerCSV('rutas_maquinas.csv');
+    productosData = await leerCSV('productos.csv');
+
+    const selEmpleado = document.getElementById('usuario');
+    empleados.forEach(e => {
+        const op = document.createElement('option');
+        op.value = e.nombre;
+        op.textContent = e.nombre;
+        selEmpleado.appendChild(op);
+    });
+
+    const selProyecto = document.getElementById('proyecto');
+    proyectos.forEach(p => {
+        const op = document.createElement('option');
+        op.value = p.proyecto;
+        op.textContent = p.proyecto;
+        selProyecto.appendChild(op);
+    });
+
+    const rutasUnicas = [...new Set(rutasMaquinas.map(r => r.ruta))];
+    const selRuta = document.getElementById('ruta');
+    rutasUnicas.forEach(r => {
+        const op = document.createElement('option');
+        op.value = r;
+        op.textContent = r;
+        selRuta.appendChild(op);
+    });
+
+    cargarProductos();
+}
+
+window.onload = inicializar;
 
 function showAlert(msg) {
     const modal = document.getElementById('custom-modal');
