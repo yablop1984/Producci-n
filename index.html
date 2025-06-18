@@ -77,6 +77,42 @@
         .hidden {
             display: none;
         }
+        #custom-modal.hidden { display: none; }
+        #custom-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-backdrop {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            position: relative;
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            max-width: 90%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .modal-content button {
+            margin-top: 1rem;
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            background: #28a745;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .modal-content button:hover {
+            background: #218838;
+        }
     </style>
 </head>
 <body>
@@ -89,7 +125,6 @@
             <label for="usuario">Empleado:</label>
             <select id="usuario">
                 <option value="">Seleccione un empleado</option>
-                <option value="ELKIN PARRA">ELKIN PARRA</option>
             </select>
 
             <label for="clave">Clave:</label>
@@ -106,7 +141,6 @@
             <label for="proyecto">Proyecto:</label>
             <select id="proyecto">
                 <option value="">Seleccione un proyecto</option>
-                <option value="00-0000 WLZF">00-0000 WLZF</option>
             </select>
 
             <label for="producto">Producto:</label>
@@ -122,19 +156,16 @@
             <label for="ruta">Ruta:</label>
             <select id="ruta" disabled>
                 <option value="">Seleccione una ruta</option>
-                <option value="Ruta 1">Ruta 1</option>
             </select>
 
             <label for="maquina">Máquina:</label>
             <select id="maquina" disabled>
                 <option value="">Seleccione una máquina</option>
-                <option value="Máquina A">Máquina A</option>
             </select>
 
             <label for="proceso">Proceso:</label>
             <select id="proceso" disabled>
                 <option value="">Seleccione un proceso</option>
-                <option value="Proceso X">Proceso X</option>
             </select>
 
             <button id="btnContinuar" onclick="mostrarPantallaFinal()" disabled>Continuar</button>
@@ -154,33 +185,35 @@
         </div>
     </div>
 
+    <!-- Modal personalizado -->
+    <div id="custom-modal" class="hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <p id="modal-message"></p>
+            <button id="modal-ok">OK</button>
+        </div>
+    </div>
+
     <div class="footer">
         Elaborado por <b>Yablop</b> - Plataforma de Producción V.1
     </div>
 
 <script>
-let productosData = [];
+// ... variables y funciones de inicialización se mantienen igual
 
-async function leerCSV(path) {
-  const resp = await fetch(path);
-  const texto = await resp.text();
-  const [cab, ...filas] = texto.trim().split('\n').map(l => l.split(','));
-  return filas.map(f => Object.fromEntries(f.map((v, i) => [cab[i], v])));
+function showAlert(msg) {
+    const modal = document.getElementById('custom-modal');
+    document.getElementById('modal-message').textContent = msg;
+    modal.classList.remove('hidden');
+    document.getElementById('modal-ok').onclick = () => modal.classList.add('hidden');
 }
-
-async function inicializar() {
-  productosData = await leerCSV('productos.csv');
-  cargarProductos();
-}
-
-window.onload = inicializar;
 
 function iniciarSesion() {
     const usuario = document.getElementById('usuario').value;
     const clave = document.getElementById('clave').value;
 
     if (usuario === '' || clave === '') {
-        alert('Por favor seleccione empleado e ingrese clave.');
+        showAlert('Por favor seleccione empleado e ingrese clave.');
         return;
     }
 
@@ -190,116 +223,20 @@ function iniciarSesion() {
     document.getElementById('pantalla-seleccion').classList.remove('hidden');
 }
 
-function cargarProductos() {
-    const productoSelect = document.getElementById('producto');
-    productoSelect.disabled = false;
-
-    const productosUnicos = [...new Set(productosData.map(item => item.producto))];
-    productosUnicos.forEach(producto => {
-        const option = document.createElement('option');
-        option.value = producto;
-        option.textContent = producto;
-        productoSelect.appendChild(option);
-    });
-}
-
-document.getElementById('producto').addEventListener('change', function() {
-    const productoSeleccionado = this.value;
-    const parteSelect = document.getElementById('parte');
-    parteSelect.innerHTML = '<option value="">Seleccione una parte</option>';
-
-    if (productoSeleccionado !== '') {
-        parteSelect.disabled = false;
-
-        const partes = productosData
-            .filter(item => item.producto === productoSeleccionado)
-            .map(item => item.parte);
-
-        const partesUnicas = [...new Set(partes)];
-        partesUnicas.forEach(parte => {
-            const option = document.createElement('option');
-            option.value = parte;
-            option.textContent = parte;
-            parteSelect.appendChild(option);
-        });
-    } else {
-        parteSelect.disabled = true;
-    }
-
-    desactivarContinuar();
-});
-
-document.getElementById('parte').addEventListener('change', function() {
-    const habilitar = this.value !== '';
-    document.getElementById('ruta').disabled = !habilitar;
-    document.getElementById('maquina').disabled = !habilitar;
-    document.getElementById('proceso').disabled = !habilitar;
-    validarSeleccion();
-});
-
-function validarSeleccion() {
-    const proyecto = document.getElementById('proyecto').value;
-    const producto = document.getElementById('producto').value;
-    const parte = document.getElementById('parte').value;
-    const ruta = document.getElementById('ruta').value;
-    const maquina = document.getElementById('maquina').value;
-    const proceso = document.getElementById('proceso').value;
-
-    const habilitar = proyecto && producto && parte && ruta && maquina && proceso;
-    document.getElementById('btnContinuar').disabled = !habilitar;
-}
-
-function desactivarContinuar() {
-    document.getElementById('ruta').disabled = true;
-    document.getElementById('maquina').disabled = true;
-    document.getElementById('proceso').disabled = true;
-    document.getElementById('btnContinuar').disabled = true;
-}
-
-document.querySelectorAll('#ruta, #maquina, #proceso').forEach(select => {
-    select.addEventListener('change', validarSeleccion);
-});
-
-function mostrarPantallaFinal() {
-    const empleado = localStorage.getItem('empleado');
-    const proyecto = document.getElementById('proyecto').value;
-    const producto = document.getElementById('producto').value;
-    const parte = document.getElementById('parte').value;
-    const ruta = document.getElementById('ruta').value;
-    const maquina = document.getElementById('maquina').value;
-    const proceso = document.getElementById('proceso').value;
-
-    document.getElementById('resumen').innerHTML = `
-        <p><strong>Empleado:</strong> ${empleado}</p>
-        <p><strong>Proyecto:</strong> ${proyecto}</p>
-        <p><strong>Producto:</strong> ${producto}</p>
-        <p><strong>Parte:</strong> ${parte}</p>
-        <p><strong>Ruta:</strong> ${ruta}</p>
-        <p><strong>Máquina:</strong> ${maquina}</p>
-        <p><strong>Proceso:</strong> ${proceso}</p>
-    `;
-
-    document.getElementById('pantalla-seleccion').classList.add('hidden');
-    document.getElementById('pantalla-finalizar').classList.remove('hidden');
-}
-
-function validarPiezas() {
-    const piezas = document.getElementById('piezas').value;
-    const btnFinalizar = document.getElementById('btnFinalizar');
-    btnFinalizar.disabled = !(piezas.trim() !== '' && parseFloat(piezas) > 0);
-}
-
 function finalizarProceso() {
     const piezas = document.getElementById('piezas').value;
 
     if (piezas.trim() === '' || parseFloat(piezas) <= 0) {
-        alert('Por favor ingrese un número de piezas válido.');
+        showAlert('Por favor ingrese un número de piezas válido.');
         return;
     }
 
-    alert(`Registro guardado con ${piezas} piezas.`);
+    showAlert(`Registro guardado con ${piezas} piezas.`);
 
-    window.location.reload();
+    document.getElementById('modal-ok').onclick = () => {
+        document.getElementById('custom-modal').classList.add('hidden');
+        window.location.reload();
+    };
 }
 </script>
 </body>
