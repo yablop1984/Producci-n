@@ -196,7 +196,6 @@ async function inicializar() {
   selRuta.disabled = false;
 }
 
-// Función para mostrar alertas personalizadas
 function showAlert(msg) {
   const modal = document.getElementById('custom-modal');
   document.getElementById('modal-message').textContent = msg;
@@ -297,7 +296,7 @@ function finalizar() {
     .then(() => {
       showAlert('Registro guardado exitosamente.');
       registroActual = {};
-      document.getElementById('piezas').value = '';
+      resetearCampos();
       btn.disabled = false;
       mostrarPantalla('pantalla-login');
     })
@@ -314,8 +313,18 @@ function mostrarPantalla(id) {
   document.getElementById(id).classList.remove('hidden');
 }
 
+function resetearCampos() {
+  document.getElementById('proyecto').value = '';
+  document.getElementById('ruta').value = '';
+  document.getElementById('maquina').innerHTML = '<option value="">Seleccione una máquina</option>';
+  document.getElementById('maquina').disabled = true;
+  document.getElementById('proceso').innerHTML = '<option value="">Seleccione un proceso</option>';
+  document.getElementById('proceso').disabled = true;
+  document.getElementById('resumen-datos').innerHTML = '';
+  document.getElementById('piezas').value = '';
+}
+
 window.onload = inicializar;
 </script>
 </body>
 </html>
-
