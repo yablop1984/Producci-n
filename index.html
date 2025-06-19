@@ -60,7 +60,6 @@
       border-radius: 8px;
       margin-bottom: 1rem;
     }
-    /* Estilos del modal personalizado */
     #custom-modal.hidden { display: none; }
     #custom-modal {
       position: fixed;
@@ -123,16 +122,16 @@
       <h2>Producción</h2>
       <label for="proyecto">Proyecto:</label>
       <select id="proyecto"><option value="">Seleccione un proyecto</option></select>
-      <label for="producto">producto:</label>
-      <select id="producto" onchange="filtrarpartes()" disabled><option value="">Seleccione un producto en desarrollo</option></select>
-      <label for="parte">parte:</label>
-      <select id="parte" onchange="filtrarproductos()" disabled><option value="">Seleccione una parte</option></select>
+      <label for="producto">Producto:</label>
+      <select id="producto"><option value="">Seleccione un producto en desarrollo</option></select>
+      <label for="parte">Parte:</label>
+      <select id="parte"><option value="">Seleccione una parte</option></select>
       <label for="ruta">Ruta:</label>
-      <select id="ruta" onchange="filtrarMaquinas()" disabled><option value="">Seleccione una ruta</option></select>
+      <select id="ruta"><option value="">Seleccione una ruta</option></select>
       <label for="maquina">Máquina:</label>
-      <select id="maquina" onchange="filtrarProcesos()" disabled><option value="">Seleccione una máquina</option></select>
+      <select id="maquina"><option value="">Seleccione una máquina</option></select>
       <label for="proceso">Proceso:</label>
-      <select id="proceso" disabled><option value="">Seleccione un proceso</option></select>
+      <select id="proceso"><option value="">Seleccione un proceso</option></select>
       <button onclick="continuar()">Continuar</button>
     </div>
 
@@ -144,7 +143,6 @@
     </div>
   </div>
 
-  <!-- Modal personalizado -->
   <div id="custom-modal" class="hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
@@ -158,7 +156,7 @@
   </footer>
 
 <script>
-let empleados = [], proyectos = [], productos = [],  partes = [], rutasMaquinas = [], registros = [];
+let empleados = [], proyectos = [], productos = [], rutasMaquinas = [], registros = [];
 let registroActual = {};
 
 async function leerCSV(path) {
@@ -174,7 +172,6 @@ async function inicializar() {
   productos = await leerCSV('productos.csv');
   rutasMaquinas = await leerCSV('rutas_maquinas.csv');
 
-  // Empleados
   const selEmpleado = document.getElementById('nombre-empleado');
   empleados.forEach(e => {
     const op = document.createElement('option');
@@ -183,7 +180,6 @@ async function inicializar() {
     selEmpleado.appendChild(op);
   });
 
-  // Proyectos
   const selProyecto = document.getElementById('proyecto');
   proyectos.forEach(p => {
     const op = document.createElement('option');
@@ -192,7 +188,6 @@ async function inicializar() {
     selProyecto.appendChild(op);
   });
 
-  // Productos
   const productosUnicas = [...new Set(productos.map(r => r.producto))];
   const selProducto = document.getElementById('producto');
   productosUnicas.forEach(r => {
@@ -201,12 +196,7 @@ async function inicializar() {
     op.textContent = r;
     selProducto.appendChild(op);
   });
-  selProducto.disabled = false;
 
-  // Partes: al cambiar producto
-  document.getElementById('producto').addEventListener('change', filtrarPartes);
-
-  // Rutas
   const rutasUnicas = [...new Set(rutasMaquinas.map(r => r.ruta))];
   const selRuta = document.getElementById('ruta');
   rutasUnicas.forEach(r => {
@@ -215,11 +205,12 @@ async function inicializar() {
     op.textContent = r;
     selRuta.appendChild(op);
   });
-  selRuta.disabled = false;
+
+  document.getElementById('producto').addEventListener('change', filtrarPartes);
+  document.getElementById('ruta').addEventListener('change', filtrarMaquinas);
+  document.getElementById('maquina').addEventListener('change', filtrarProcesos);
 }
 
-
-// Función para mostrar alertas personalizadas
 function showAlert(msg) {
   const modal = document.getElementById('custom-modal');
   document.getElementById('modal-message').textContent = msg;
@@ -239,28 +230,14 @@ function validarLogin() {
     showAlert('Credenciales incorrectas');
   }
 }
-function filtrarProductos() {
-  const selProducto = document.getElementById('producto');
-  selProducto.innerHTML = '<option value="">Seleccione un producto</option>';
-  selProducto.disabled = false;
-
-  const productos = [...new Set(productosData.map(r => r.producto))];
-  productos.forEach(pd => {
-    const op = document.createElement('option');
-    op.value = pd;
-    op.textContent = pd;
-    selProducto.appendChild(op);
-  });
-}
 
 function filtrarPartes() {
   const productoSel = document.getElementById('producto').value;
   const selParte = document.getElementById('parte');
   selParte.innerHTML = '<option value="">Seleccione una parte</option>';
-  selParte.disabled = true;
 
   if (!productoSel) return;
-  const partes = productosData.filter(r => r.producto === productoSel).map(r => r.parte);
+  const partes = productos.filter(r => r.producto === productoSel).map(r => r.parte);
   const partesUnicas = [...new Set(partes)];
   partesUnicas.forEach(pt => {
     const op = document.createElement('option');
@@ -268,15 +245,12 @@ function filtrarPartes() {
     op.textContent = pt;
     selParte.appendChild(op);
   });
-  selParte.disabled = false;
+}
 
 function filtrarMaquinas() {
   const rutaSel = document.getElementById('ruta').value;
   const selMaquina = document.getElementById('maquina');
   selMaquina.innerHTML = '<option value="">Seleccione una máquina</option>';
-  document.getElementById('proceso').innerHTML = '<option value="">Seleccione un proceso</option>';
-  selMaquina.disabled = true;
-  document.getElementById('proceso').disabled = true;
 
   if (!rutaSel) return;
   const maquinas = [...new Set(rutasMaquinas.filter(r => r.ruta === rutaSel).map(r => r.maquina))];
@@ -286,7 +260,6 @@ function filtrarMaquinas() {
     op.textContent = m;
     selMaquina.appendChild(op);
   });
-  selMaquina.disabled = false;
 }
 
 function filtrarProcesos() {
@@ -294,7 +267,6 @@ function filtrarProcesos() {
   const maqSel = document.getElementById('maquina').value;
   const selProceso = document.getElementById('proceso');
   selProceso.innerHTML = '<option value="">Seleccione un proceso</option>';
-  selProceso.disabled = true;
 
   if (!maqSel) return;
   const procesos = rutasMaquinas.filter(r => r.ruta === rutaSel && r.maquina === maqSel).map(r => r.proceso);
@@ -304,7 +276,6 @@ function filtrarProcesos() {
     op.textContent = p;
     selProceso.appendChild(op);
   });
-  selProceso.disabled = false;
 }
 
 function continuar() {
@@ -375,5 +346,6 @@ function mostrarPantalla(id) {
 
 window.onload = inicializar;
 </script>
+
 </body>
 </html>
