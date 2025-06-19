@@ -121,17 +121,17 @@
     <div id="pantalla-seleccion" class="hidden">
       <h2>Producción</h2>
       <label for="proyecto">Proyecto:</label>
-      <select id="proyecto"><option value="">Seleccione un proyecto</option></select>
+      <select id="proyecto"></select>
       <label for="producto">Producto:</label>
-      <select id="producto"><option value="">Seleccione un producto en desarrollo</option></select>
+      <select id="producto" disabled></select>
       <label for="parte">Parte:</label>
-      <select id="parte"><option value="">Seleccione una parte</option></select>
+      <select id="parte" disabled></select>
       <label for="ruta">Ruta:</label>
-      <select id="ruta"><option value="">Seleccione una ruta</option></select>
+      <select id="ruta" disabled></select>
       <label for="maquina">Máquina:</label>
-      <select id="maquina"><option value="">Seleccione una máquina</option></select>
+      <select id="maquina" disabled></select>
       <label for="proceso">Proceso:</label>
-      <select id="proceso"><option value="">Seleccione un proceso</option></select>
+      <select id="proceso" disabled></select>
       <button onclick="continuar()">Continuar</button>
     </div>
 
@@ -152,7 +152,7 @@
   </div>
 
   <footer>
-    Elaborado por <strong>Yablop</strong> - Plataforma de Producción V.1.2
+    Elaborado por <strong>Yablop</strong> - Plataforma de Producción V.1.3
   </footer>
 
 <script>
@@ -181,6 +181,7 @@ async function inicializar() {
   });
 
   const selProyecto = document.getElementById('proyecto');
+  selProyecto.innerHTML = '<option value="">Seleccione un proyecto</option>';
   proyectos.forEach(p => {
     const op = document.createElement('option');
     op.value = p.proyecto;
@@ -188,25 +189,9 @@ async function inicializar() {
     selProyecto.appendChild(op);
   });
 
-  const productosUnicas = [...new Set(productos.map(r => r.producto))];
-  const selProducto = document.getElementById('producto');
-  productosUnicas.forEach(r => {
-    const op = document.createElement('option');
-    op.value = r;
-    op.textContent = r;
-    selProducto.appendChild(op);
-  });
-
-  const rutasUnicas = [...new Set(rutasMaquinas.map(r => r.ruta))];
-  const selRuta = document.getElementById('ruta');
-  rutasUnicas.forEach(r => {
-    const op = document.createElement('option');
-    op.value = r;
-    op.textContent = r;
-    selRuta.appendChild(op);
-  });
-
+  selProyecto.addEventListener('change', habilitarProducto);
   document.getElementById('producto').addEventListener('change', filtrarPartes);
+  document.getElementById('parte').addEventListener('change', habilitarRuta);
   document.getElementById('ruta').addEventListener('change', filtrarMaquinas);
   document.getElementById('maquina').addEventListener('change', filtrarProcesos);
 }
@@ -226,9 +211,27 @@ function validarLogin() {
   if (encontrado) {
     registroActual.nombre = nombre;
     mostrarPantalla('pantalla-seleccion');
+    resetPantallaSeleccion();
   } else {
     showAlert('Credenciales incorrectas');
   }
+}
+
+function habilitarProducto() {
+  const selProducto = document.getElementById('producto');
+  selProducto.innerHTML = '<option value="">Seleccione un producto</option>';
+  const productosUnicas = [...new Set(productos.map(r => r.producto))];
+  productosUnicas.forEach(p => {
+    const op = document.createElement('option');
+    op.value = p;
+    op.textContent = p;
+    selProducto.appendChild(op);
+  });
+  selProducto.disabled = false;
+  document.getElementById('parte').disabled = true;
+  document.getElementById('ruta').disabled = true;
+  document.getElementById('maquina').disabled = true;
+  document.getElementById('proceso').disabled = true;
 }
 
 function filtrarPartes() {
@@ -245,6 +248,13 @@ function filtrarPartes() {
     op.textContent = pt;
     selParte.appendChild(op);
   });
+  selParte.disabled = false;
+}
+
+function habilitarRuta() {
+  document.getElementById('ruta').disabled = false;
+  document.getElementById('maquina').disabled = true;
+  document.getElementById('proceso').disabled = true;
 }
 
 function filtrarMaquinas() {
@@ -260,6 +270,7 @@ function filtrarMaquinas() {
     op.textContent = m;
     selMaquina.appendChild(op);
   });
+  selMaquina.disabled = false;
 }
 
 function filtrarProcesos() {
@@ -276,6 +287,7 @@ function filtrarProcesos() {
     op.textContent = p;
     selProceso.appendChild(op);
   });
+  selProceso.disabled = false;
 }
 
 function continuar() {
@@ -327,6 +339,8 @@ function finalizar() {
     .then(() => {
       showAlert('Registro guardado exitosamente.');
       registroActual = {};
+      resetLogin();
+      resetPantallaSeleccion();
       document.getElementById('piezas').value = '';
       btn.disabled = false;
       mostrarPantalla('pantalla-login');
@@ -335,6 +349,25 @@ function finalizar() {
       btn.disabled = false;
       showAlert('Error al enviar los datos: ' + e.message);
     });
+}
+
+function resetLogin() {
+  document.getElementById('nombre-empleado').value = '';
+  document.getElementById('clave-empleado').value = '';
+}
+
+function resetPantallaSeleccion() {
+  document.getElementById('proyecto').value = '';
+  document.getElementById('producto').innerHTML = '<option value="">Seleccione un producto</option>';
+  document.getElementById('producto').disabled = true;
+  document.getElementById('parte').innerHTML = '<option value="">Seleccione una parte</option>';
+  document.getElementById('parte').disabled = true;
+  document.getElementById('ruta').innerHTML = '<option value="">Seleccione una ruta</option>';
+  document.getElementById('ruta').disabled = true;
+  document.getElementById('maquina').innerHTML = '<option value="">Seleccione una máquina</option>';
+  document.getElementById('maquina').disabled = true;
+  document.getElementById('proceso').innerHTML = '<option value="">Seleccione un proceso</option>';
+  document.getElementById('proceso').disabled = true;
 }
 
 function mostrarPantalla(id) {
@@ -346,6 +379,5 @@ function mostrarPantalla(id) {
 
 window.onload = inicializar;
 </script>
-
 </body>
 </html>
