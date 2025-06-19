@@ -241,7 +241,11 @@ function filtrarPartes() {
   selParte.innerHTML = '<option value="">Seleccione una parte</option>';
 
   if (!productoSel) return;
-  const partes = productos.filter(r => r.producto === productoSel).map(r => r.parte);
+
+  const partes = productos
+    .filter(r => r.producto.toLowerCase() === productoSel.toLowerCase())
+    .map(r => r.parte);
+
   const partesUnicas = [...new Set(partes)];
   partesUnicas.forEach(pt => {
     const op = document.createElement('option');
@@ -249,8 +253,10 @@ function filtrarPartes() {
     op.textContent = pt;
     selParte.appendChild(op);
   });
+
   selParte.disabled = false;
 }
+
 
 function habilitarRuta() {
   document.getElementById('ruta').disabled = false;
