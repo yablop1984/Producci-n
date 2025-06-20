@@ -247,6 +247,10 @@ function filtrarParte() {
     .map(r => r.parte);
 
   const partesUnicas = [...new Set(partes)];
+
+console.log("Producto seleccionado:", productoSel);
+console.log("Partes encontradas:", partesUnicas);
+
   partesUnicas.forEach(pt => {
     const op = document.createElement('option');
     op.value = pt;
