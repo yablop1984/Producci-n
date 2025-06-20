@@ -120,7 +120,7 @@
     </div>
 
     <div id="pantalla-seleccion" class="hidden">
-      <h2>Producción</h2>
+      <h2>Producción Ind.</h2>
       <label for="proyecto">Proyecto:</label>
       <select id="proyecto"></select>
       <label for="producto">Producto:</label>
@@ -153,7 +153,7 @@
   </div>
 
   <footer>
-    Elaborado por <strong>Yablop</strong> - Plataforma de Producción V.1.4
+    Elaborado por <strong>Yablop</strong> - Plataforma de Producción V.1.4 Mantenimiento 
   </footer>
 
 <script>
@@ -191,7 +191,7 @@ async function inicializar() {
   });
 
   selProyecto.addEventListener('change', habilitarProducto);
-  document.getElementById('producto').addEventListener('change', filtrarPartes);
+  document.getElementById('producto').addEventListener('change', filtrarParte);
   document.getElementById('parte').addEventListener('change', habilitarRuta);
   document.getElementById('ruta').addEventListener('change', filtrarMaquinas);
   document.getElementById('maquina').addEventListener('change', filtrarProcesos);
@@ -235,19 +235,19 @@ function habilitarProducto() {
   document.getElementById('proceso').disabled = true;
 }
 
-function filtrarPartes() {
+function filtrarParte() {
   const productoSel = document.getElementById('producto').value;
   const selParte = document.getElementById('parte');
   selParte.innerHTML = '<option value="">Seleccione una parte</option>';
 
   if (!productoSel) return;
 
-  const partes = productos
+  const parte = productos
     .filter(r => r.producto.toLowerCase() === productoSel.toLowerCase())
     .map(r => r.parte);
 
-  const partesUnicas = [...new Set(partes)];
-  partesUnicas.forEach(pt => {
+  const parteUnicas = [...new Set(parte)];
+  parteUnicas.forEach(pt => {
     const op = document.createElement('option');
     op.value = pt;
     op.textContent = pt;
