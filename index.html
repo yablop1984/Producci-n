@@ -192,7 +192,7 @@ async function inicializar() {
 
   selProyecto.addEventListener('change', habilitarProducto);
   document.getElementById('producto').addEventListener('change', filtrarParte);
-  document.getElementById('parte').addEventListener('change', habilitarRuta);
+  document.getElementById('parte').addEventListener('change', filtrarRutas);
   document.getElementById('ruta').addEventListener('change', filtrarMaquinas);
   document.getElementById('maquina').addEventListener('change', filtrarProcesos);
 }
@@ -261,26 +261,21 @@ console.log("Partes encontradas:", partesUnicas);
   selParte.disabled = false;
 }
 
-function habilitarRuta() {
-  document.getElementById('ruta').disabled = false;
+function filtrarRutas() {
+  const selRuta = document.getElementById('ruta');
+  selRuta.innerHTML = '<option value="">Seleccione una ruta</option>';
+
+  const rutas = [...new Set(rutasMaquinas.map(r => r.ruta))];
+  rutas.forEach(rt => {
+    const op = document.createElement('option');
+    op.value = rt;
+    op.textContent = rt;
+    selRuta.appendChild(op);
+  });
+
+  selRuta.disabled = false;
   document.getElementById('maquina').disabled = true;
   document.getElementById('proceso').disabled = true;
-}
-
-function filtrarMaquinas() {
-  const rutaSel = document.getElementById('ruta').value;
-  const selMaquina = document.getElementById('maquina');
-  selMaquina.innerHTML = '<option value="">Seleccione una máquina</option>';
-
-  if (!rutaSel) return;
-  const maquinas = [...new Set(rutasMaquinas.filter(r => r.ruta === rutaSel).map(r => r.maquina))];
-  maquinas.forEach(m => {
-    const op = document.createElement('option');
-    op.value = m;
-    op.textContent = m;
-    selMaquina.appendChild(op);
-  });
-  selMaquina.disabled = false;
 }
 
 function filtrarProcesos() {
