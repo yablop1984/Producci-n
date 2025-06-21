@@ -153,7 +153,7 @@
   </div>
 
   <footer>
-    Elaborado por <strong>Yablop</strong> - Plataforma de Producción V.1.4 Mantenimiento 
+    Elaborado por <strong>Yablop</strong> - Plataforma de Producción V.1.5 Mantenimiento 
   </footer>
 
 <script>
@@ -266,10 +266,10 @@ function filtrarRutas() {
   selRuta.innerHTML = '<option value="">Seleccione una ruta</option>';
 
   const rutas = [...new Set(rutasMaquinas.map(r => r.ruta))];
-  rutas.forEach(rt => {
+  rutas.forEach(r => {
     const op = document.createElement('option');
-    op.value = rt;
-    op.textContent = rt;
+    op.value = r;
+    op.textContent = r;
     selRuta.appendChild(op);
   });
 
@@ -335,11 +335,11 @@ function continuar() {
   const r = document.getElementById('ruta').value;
   const m = document.getElementById('maquina').value;
   const pr = document.getElementById('proceso').value;
-  if (!p || !pd || !pt || !rt || !m || !pr) return showAlert('Todos los campos deben estar completos.');
+  if (!p || !pd || !pt || !r || !m || !pr) return showAlert('Todos los campos deben estar completos.');
   registroActual.proyecto = p;
   registroActual.producto = pd;
   registroActual.parte = pt;
-  registroActual.ruta = rt;
+  registroActual.ruta = r;
   registroActual.maquina = m;
   registroActual.proceso = pr;
   registroActual.fecha_inicio = new Date().toLocaleString();
@@ -349,7 +349,7 @@ function continuar() {
    <strong>Proyecto:</strong> ${p}<br>
    <strong>Producto:</strong> ${pd}<br>
    <strong>Parte:</strong> ${pt}<br>
-   <strong>Ruta:</strong> ${rt}<br>
+   <strong>Ruta:</strong> ${r}<br>
    <strong>Máquina:</strong> ${m}<br>
    <strong>Proceso:</strong> ${pr}`;
 
