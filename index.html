@@ -222,10 +222,10 @@ function habilitarProducto() {
   const selProducto = document.getElementById('producto');
   selProducto.innerHTML = '<option value="">Seleccione un producto</option>';
   const productosUnicas = [...new Set(productos.map(r => r.producto))];
-  productosUnicas.forEach(p => {
+  productosUnicas.forEach(pd => {
     const op = document.createElement('option');
-    op.value = p;
-    op.textContent = p;
+    op.value = pd;
+    op.textContent = pd;
     selProducto.appendChild(op);
   });
   selProducto.disabled = false;
@@ -277,6 +277,28 @@ function filtrarRutas() {
   document.getElementById('maquina').disabled = true;
   document.getElementById('proceso').disabled = true;
 }
+function filtrarMaquinas() {
+  const rutaSel = document.getElementById('ruta').value;
+  const selMaquina = document.getElementById('maquina');
+  selMaquina.innerHTML = '<option value="">Seleccione una máquina</option>';
+
+  if (!rutaSel) return;
+
+  const maquinas = [...new Set(
+    rutasMaquinas
+      .filter(r => r.ruta.trim().toLowerCase() === rutaSel.trim().toLowerCase())
+      .map(r => r.maquina)
+  )];
+
+  maquinas.forEach(m => {
+    const op = document.createElement('option');
+    op.value = m;
+    op.textContent = m;
+    selMaquina.appendChild(op);
+  });
+
+  selMaquina.disabled = false;
+}
 
 function filtrarProcesos() {
   const rutaSel = document.getElementById('ruta').value;
@@ -285,15 +307,26 @@ function filtrarProcesos() {
   selProceso.innerHTML = '<option value="">Seleccione un proceso</option>';
 
   if (!maqSel) return;
-  const procesos = rutasMaquinas.filter(r => r.ruta === rutaSel && r.maquina === maqSel).map(r => r.proceso);
-  procesos.forEach(p => {
+
+  const procesos = [...new Set(
+    rutasMaquinas
+      .filter(r => 
+        r.ruta.trim().toLowerCase() === rutaSel.trim().toLowerCase() &&
+        r.maquina.trim().toLowerCase() === maqSel.trim().toLowerCase()
+      )
+      .map(r => r.proceso)
+  )];
+
+  procesos.forEach(pr => {
     const op = document.createElement('option');
-    op.value = p;
-    op.textContent = p;
+    op.value = pr;
+    op.textContent = pr;
     selProceso.appendChild(op);
   });
+
   selProceso.disabled = false;
 }
+
 
 function continuar() {
   const p = document.getElementById('proyecto').value;
@@ -302,11 +335,11 @@ function continuar() {
   const r = document.getElementById('ruta').value;
   const m = document.getElementById('maquina').value;
   const pr = document.getElementById('proceso').value;
-  if (!p || !pd || !pt || !r || !m || !pr) return showAlert('Todos los campos deben estar completos.');
+  if (!p || !pd || !pt || !rt || !m || !pr) return showAlert('Todos los campos deben estar completos.');
   registroActual.proyecto = p;
   registroActual.producto = pd;
   registroActual.parte = pt;
-  registroActual.ruta = r;
+  registroActual.ruta = rt;
   registroActual.maquina = m;
   registroActual.proceso = pr;
   registroActual.fecha_inicio = new Date().toLocaleString();
@@ -316,7 +349,7 @@ function continuar() {
    <strong>Proyecto:</strong> ${p}<br>
    <strong>Producto:</strong> ${pd}<br>
    <strong>Parte:</strong> ${pt}<br>
-   <strong>Ruta:</strong> ${r}<br>
+   <strong>Ruta:</strong> ${rt}<br>
    <strong>Máquina:</strong> ${m}<br>
    <strong>Proceso:</strong> ${pr}`;
 
