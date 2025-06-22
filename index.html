@@ -348,7 +348,7 @@ function continuar() {
   registroActual.ruta = r;
   registroActual.maquina = m;
   registroActual.proceso = pr;
-  registroActual.fecha_inicio = new Date().toLocaleString();
+  registroActual.fecha_inicio =                        obtenerFechaHora();
 
   document.getElementById("resumen-datos").innerHTML =
   `<strong>Empleado:</strong> ${registroActual.nombre}<br>
@@ -371,7 +371,7 @@ function finalizar() {
   btn.disabled = true;
 
   registroActual.piezas = piezas;
-  registroActual.fecha_fin = new Date().toLocaleString();
+  registroActual.fecha_fin = obtenerFechaHora();
   registros.push({ ...registroActual });
 
   fetch(window.API_URL + '/api/enviar', {
@@ -419,6 +419,16 @@ function mostrarPantalla(id) {
     document.getElementById(p).classList.add('hidden');
   });
   document.getElementById(id).classList.remove('hidden');
+}
+
+function obtenerFechaHora() {
+  const ahora = new Date();
+  return ahora.getFullYear() + '-' +
+    String(ahora.getMonth() + 1).padStart(2, '0') + '-' +
+    String(ahora.getDate()).padStart(2, '0') + ' ' +
+    String(ahora.getHours()).padStart(2, '0') + ':' +
+    String(ahora.getMinutes()).padStart(2, '0') + ':' +
+    String(ahora.getSeconds()).padStart(2, '0');
 }
 
 window.onload = inicializar;
