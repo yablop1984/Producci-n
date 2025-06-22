@@ -335,7 +335,9 @@ function continuar() {
   const r = document.getElementById('ruta').value;
   const m = document.getElementById('maquina').value;
   const pr = document.getElementById('proceso').value;
+  const nombre = document.getElementById('nombre-empleado').value; 
   if (!p || !pd || !pt || !r || !m || !pr) return showAlert('Todos los campos deben estar completos.');
+  registroActual.nombre = nombre;
   registroActual.proyecto = p;
   registroActual.producto = pd;
   registroActual.parte = pt;
