@@ -1,12 +1,12 @@
 producto,parte
-puertas,listones estructura
-puertas,tableros
-puertas,hoja
-puertas,larguero marco
-puertas,cabezal marco
-puertas,tapariel
-enchapes,listones reeng
-enchapes,tableros
-enchapes,panel
-biombo,listones
-biombo,tableros
+PUERTAS,LISTONES ESTRUCTURA
+PUERTAS,TABLEROS
+PUERTAS,HOJA
+PUERTAS,LARGUERO MARCO
+PUERTAS,CABEZAL MARCO
+PUERTAS,TAPARIEL
+ENCHAPES,LISTONES REENG
+ENCHAPES,TABLEROS
+ENCHAPES,PANEL
+BIOMBO,LISTONES
+BIOMBO,TABLEROS
